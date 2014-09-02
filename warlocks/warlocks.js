@@ -1,5 +1,143 @@
 ﻿(function(window, document, $) {
 
+    function Random(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    function VectorTwo(X, Y) {
+
+        this.x = X;
+        this.y = Y;
+
+    };
+
+    VectorTwo.Copy = function (vec) {
+
+        return new VectorTwo(vec.x, vec.y);
+
+    };
+
+    VectorTwo.Add = function(vec1, vec2){
+
+        return new VectorTwo(vec1.x + vec2.x, vec1.y + vec2.y);
+
+    };
+
+    function Particle(position, velocity, color) {
+
+        this._position = position;
+        this._velocity = velocity;
+        this._color = color;
+        this._duration = 40;
+
+    };
+
+    Particle._indexArray = [];
+    Particle._nextIndex = -1;
+    Particle._particleArray = [];
+
+    
+
+    Particle.prototype.Refurbish = function (position, velocity, color) {
+
+        this._position = position;
+        this._velocity = velocity;
+        this._color = color;
+        this._duration = 40;
+
+    };
+
+    Particle.prototype.Update = function () {
+
+        this._duration--;
+        this._position = VectorTwo.Add(this._position, this._velocity);
+
+        
+
+    };
+
+    Particle.Create = function (position, velocity, color) {
+
+        if (Particle._nextIndex >= 0) {
+
+            var temp = Particle._particleArray[Particle._indexArray[Particle._nextIndex]];
+            Particle._nextIndex--;
+            temp.Refurbish(position, velocity, color);
+            //return temp;
+
+        }
+        else {
+
+            Particle._particleArray.push(new Particle(position, velocity, color));
+        }
+
+    };
+
+    Particle.Recycle = function (index) {
+
+
+        Particle._nextIndex++;
+        Particle._indexArray[Particle._nextIndex] = index;
+        
+        Particle._particleArray[index]._duration = -1;
+
+    };
+
+    function Emitter(position, velocity, particlevelocity) {
+
+        this._position = position;
+        this._velocity = velocity;
+        this._particlevelocity = particlevelocity;
+        this._duration = 5;
+        this.parts = [];
+    
+        
+
+        this.angle = Math.atan2(this._velocity.y, this._velocity.x);
+
+    };
+
+    Emitter.prototype.Update = function(){
+
+        this._duration--;
+
+        this._position = VectorTwo.Add(this._position, this._velocity);
+
+
+        for (var i = 0; i < 10; i++) {
+
+            var coneangle = this.angle + Random(-Math.PI / 32, Math.PI / 32);
+            var intensity = Random(1, 2);
+
+            //this.parts.push(new Particle(VectorTwo.Copy(this._position), new VectorTwo(Math.cos(coneangle), Math.sin(coneangle)),'red'));
+
+            //particlearray.push(new Particle(VectorTwo.Copy(this._position), new VectorTwo(intensity * this._particlevelocity * Math.cos(coneangle), intensity * this._particlevelocity * Math.sin(coneangle)), 'red'));
+
+            //particlearray.push(Particle.Create(VectorTwo.Copy(this._position), new VectorTwo(intensity * this._particlevelocity * Math.cos(coneangle), intensity * this._particlevelocity * Math.sin(coneangle)), 'red'));
+
+            Particle.Create(VectorTwo.Copy(this._position), new VectorTwo(intensity * this._particlevelocity * Math.cos(coneangle), intensity * this._particlevelocity * Math.sin(coneangle)), 'red');
+
+        }
+
+    };
+
+    function Projectile(id, position, velocity) {
+
+        var self = this;
+        this._id = id;
+        this._position = position;
+        this._velocity = velocity;
+
+
+    };
+
+    Projectile.prototype.Update = function () {
+
+        this._position = VectorTwo.Add(this._position, this._velocity);
+
+
+    };
+
     function Player() {
 
         this.id = -1;
@@ -8,6 +146,7 @@
         this.rotation = 0;
         this.velocity = 0;
         this.angularvelocity = 0;
+        this.hit = false;
 
     };
 
@@ -17,6 +156,9 @@
 
     var playerarray = [];
     var imagearray = [];
+    var projectilearray = [];
+    var emitterarray = [];
+    var particlearray = Particle._particleArray;
 
     imagearray['avatar'] = new Image();
     imagearray['avatar'].src = 'img/person.png';
@@ -45,10 +187,41 @@
         inputs.id = myid;
 
     };
+    hub.client.updateProjectiles = function (projectiles) {
+
+        //projectilearray = [];
+
+        $.each(projectiles, function (index, proj) {
+
+            if (typeof projectilearray[proj.id] == 'undefined') {
+                // does not exist
+                projectilearray[proj.id] = new Projectile( proj.id, new VectorTwo(parseFloat(proj.position.X), parseFloat(proj.position.Y)), new VectorTwo(parseFloat(proj.velocity.X), parseFloat(proj.velocity.Y)) );
+                
+            }
+            else {
+                // does exist
+            }
+
+            //projectilearray.push({});
+
+            
+
+            //projectilearray.push(proj);
+
+        });
+
+    };
+
+    hub.client.addEmitter = function (position, velocity) {
+
+        emitterarray.push(new Emitter(new VectorTwo(parseFloat(position.X), parseFloat(position.Y)), new VectorTwo(parseFloat(velocity.X), parseFloat(velocity.Y)), 4));
+
+    };
+
 
     hub.client.updateState = function (players) {
 
-        //console.log(players);
+        
 
         var newplayer;
 
@@ -128,7 +301,7 @@
         context.fillStyle = "black";
 
         $.each(playerarray, function (index, player) {
-            console.log(player.rotation + " ,  "  + player.x + " ,  " + player.y);
+            
             //context.fillRect(player.x, player.y, 60, 60);
             context.save();
             context.translate(player.x, player.y);
@@ -139,12 +312,56 @@
 
         });
 
-        
+        context.fillStyle = "red";
+
+        $.each(projectilearray, function (index, proj) {
+
+            proj._position = VectorTwo.Add(proj._position, proj._velocity);
+
+            context.fillRect(proj._position.x, proj._position.y, 20, 20);
+
+
+
+        });
+
+        for (var i = emitterarray.length - 1; i >= 0; i--) {
+
+            var temp = emitterarray[i];
+
+            if (temp._duration >= 0) {
+                temp.Update();
+
+            }
+
+        }
+
+        for (var i = particlearray.length - 1; i >= 0; i--) {
+
+            var temp = particlearray[i];
+
+            if (temp._duration > 0) {
+
+                temp.Update();
+                context.fillRect(temp._position.x-1, temp._position.y-1, 1, 1);
+            }
+            else if (temp._duration == 0) {
+                
+                Particle.Recycle(i);
+
+            }
+
+
+        }
+
+
+
 
         hub.server.sendInput(inputs);
-        //console.log(inputs);
+        
 
         requestAnimationFrame(Draw);
+
+        console.log("cached projectiles : " + Particle._nextIndex + "   active projectiles : " + Particle._particleArray.length + "  "  + particlearray.length);
 
     };
 
@@ -193,6 +410,10 @@
             inputs.lmb = 1;
 
         }
+
+        
+
+        emitterarray.push(new Emitter(new VectorTwo(e.pageX, e.pageY), new VectorTwo(2,2), 4));
 
     });
 

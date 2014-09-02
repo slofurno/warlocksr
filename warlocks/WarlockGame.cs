@@ -16,12 +16,13 @@ namespace warlocks
         public ConcurrentQueue<PlayerInput> newinputs;
         public List<Player> players;
         public IHubContext hubcontext;
+        public List<Projectile> projectiles;
 
         public WarlockGame()
         {
             this.newinputs = new ConcurrentQueue<PlayerInput>();
             this.players = new List<Player>();
-
+            this.projectiles = new List<Projectile>();
             this.hubcontext = GlobalHost.ConnectionManager.GetHubContext<WarlocksHub>();
 
             WebApiApplication.physicsTimer = new Timer(20); //was 40
@@ -47,7 +48,7 @@ namespace warlocks
 
                     if (temp != null)
                     {
-                        temp.Update(currentelement);
+                        temp.ProcessInputs(currentelement);
                         //newinputs.RemoveAt(i);
 
                     }
@@ -55,8 +56,20 @@ namespace warlocks
 
             }
 
+            foreach (Player p in players)
+            {
+                p.Update();
+            }
+
+            foreach (Projectile p in projectiles)
+            {
+
+                p.position = p.position + (p.direction * p._velocity);
+
+            }
 
 
+            hubcontext.Clients.All.updateProjectiles(projectiles.ToArray());
             hubcontext.Clients.All.updateState(players.ToArray());
 
 
@@ -64,7 +77,7 @@ namespace warlocks
 
         public int AddPlayer()
         {
-            Player tempplayer = new Player();
+            Player tempplayer = new Player(this);
             players.Add(tempplayer);
 
             return tempplayer.id;
@@ -76,7 +89,7 @@ namespace warlocks
         {
             //newinputs.Add(input);
             newinputs.Enqueue(input);
-            Debug.WriteLine(input.id + " has the q key pressed : " + input.q);
+            //Debug.WriteLine(input.id + " has the q key pressed : " + input.q);
 
         }
 

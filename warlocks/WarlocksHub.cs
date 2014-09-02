@@ -25,5 +25,11 @@ namespace warlocks
             Warlocks.warlockgame.ProcessInput(someinput);
 
         }
+
+        public void KeyDown(int id, int key)
+        {
+
+
+        }
     }
 }
