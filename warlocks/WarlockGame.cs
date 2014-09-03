@@ -177,8 +177,15 @@ namespace warlocks
         {
 
             this.position = this.position + command.velocity;
-            this.view = command.view;
-            this.view.Normalize();
+
+            if (command.view.len > 0)
+            {
+                this.view = command.view;
+                this.view.Normalize();
+
+            }
+
+           
 
 
         }

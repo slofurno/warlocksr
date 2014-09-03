@@ -82,6 +82,11 @@ namespace warlocks
             set { y = value; ComputeLength(); }
         }
 
+        public double len
+        {
+            get { return length; }
+        }
+
         public Vector2(double X, double Y)
 		{
 			x = X;

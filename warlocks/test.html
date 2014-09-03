@@ -37,6 +37,10 @@
 
         <script>
 
+            var starttime;
+            var iterations = 0;
+            var fps = 0;
+
             var controller = { dleft: 0, dright: 0, dup: 0, ddown: 0, rightx: 0, righty: 0, righttrigger: 0 };
             var tempelements = [];
             var playerarray = [];
@@ -63,11 +67,11 @@
                     var temp = tempelements[player.id];
 
 
-                        temp.style.left = '' + player.position.X + 'px';
-                        temp.style.top = '' + player.position.Y + 'px';
+                        //temp.style.left = '' + player.position.X + 'px';
+                        //temp.style.top = '' + player.position.Y + 'px';
 
                         var angle = Math.round(Math.atan2(player.view.Y, player.view.X) * (180 / Math.PI));
-                        temp.style.transform = 'rotate(' + angle + 'deg)';
+                        temp.style.transform = 'translate(' + player.position.X + 'px, ' + player.position.Y + 'px) translateZ(0) rotate(' + angle + 'deg)';
                     
                 });
 
@@ -77,6 +81,14 @@
                 //console.log(playerarray);
 
                 //console.log("axis 0" + controller.axes[0] + " " + controller.axes[1] + " " + controller.axes[2] + " " + controller.axes[3] + " " + controller.axes[4] + " " + controller.axes[5] + " ");
+
+                iterations++;
+                var currenttime = new Date;
+
+                fps = (iterations / (currenttime - starttime)) * 1000;
+
+                console.log("fps : " + fps);
+
 
             }
 
@@ -190,6 +202,7 @@
             $.connection.hub.start().done(function () {
 
                 //hub.server.startPlayer();
+                starttime = new Date;
                 tick();
                 console.log("STARTING");
 
@@ -211,8 +224,9 @@
 
                         var newDiv = document.createElement("div");
                         newDiv.style.position = "absolute";
-                        var newContent = document.createTextNode(":D");
-                        newDiv.appendChild(newContent); //add the text node to the newly created div
+                        newDiv.innerHTML="<IMG SRC = 'img/person.png'>"
+                        //var newContent = document.createTextNode(":D");
+                        //newDiv.appendChild(newContent); //add the text node to the newly created div
 
 
                         tempelements[player.id] = newDiv;
