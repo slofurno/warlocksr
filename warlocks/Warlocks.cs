@@ -7,6 +7,25 @@ using System.Diagnostics;
 
 namespace warlocks
 {
+
+    public static class RNG
+    {
+        static Random _r = new Random();
+
+        public static double next(double max)
+        {
+
+            return (max * _r.NextDouble());
+        }
+
+        public static double next(double min, double max)
+        {
+
+            return (((max-min) * _r.NextDouble())+min);
+        }
+
+    }
+
     public static class Warlocks
     {
         public static WarlockGame warlockgame = new WarlockGame();
@@ -85,7 +104,7 @@ namespace warlocks
             length = Math.Sqrt(Math.Pow(x, 2) + Math.Pow(y, 2));
         }
 
-        public void Normalize()
+        public Vector2 Normalize()
         {
 
             if (length==0)
@@ -101,10 +120,16 @@ namespace warlocks
                 y = y / length;
                 ComputeLength();
             }
+
+            return this;
             
         }
 
         public static Vector2 operator *(Vector2 v1, double x)
+        {
+            return new Vector2(v1.X * x, v1.Y * x);
+        }
+        public static Vector2 operator *(Vector2 v1, int x)
         {
             return new Vector2(v1.X * x, v1.Y * x);
         }

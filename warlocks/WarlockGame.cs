@@ -19,6 +19,9 @@ namespace warlocks
         public List<Projectile> projectiles;
         //private readonly static Lazy<WarlockGame> _instance = new Lazy<WarlockGame>(() => new WarlockGame());
         private Dictionary<string, Player> _playerdictionary;
+        private List<Player> _playerlist;
+        private List<AIController> _ailist;
+        
 
         public WarlockGame()
         {
@@ -28,6 +31,8 @@ namespace warlocks
             this.hubcontext = GlobalHost.ConnectionManager.GetHubContext<WarlocksHub>();
 
             _playerdictionary = new Dictionary<string, Player>();
+            _playerlist = new List<Player>();
+            _ailist = new List<AIController>();
 
             WebApiApplication.physicsTimer = new Timer(20); //was 40
             WebApiApplication.physicsTimer.Enabled = true;
@@ -39,7 +44,7 @@ namespace warlocks
         {
             //foreach (PlayerInput q in newinputs)
             //for (var i = newinputs.Count-1; i>= 0; i--)
-
+            /*
             var packetarray = new List<Player>();
 
             foreach (var pair in _playerdictionary)
@@ -51,13 +56,43 @@ namespace warlocks
             //hubcontext.Clients.All.updateProjectiles(projectiles.ToArray());
             hubcontext.Clients.All.updateState(packetarray.ToArray());
 
+            */
 
+            
+
+            var len = _ailist.Count;
+
+            if (len < 200)
+            {
+                AddAI();
+                len++;
+            }
+
+            for (var i = 0; i<len; i++){
+                _ailist[i].Think();
+            }
+
+            hubcontext.Clients.All.updateState(_playerlist.ToArray());
         }
 
         public void AddPlayer(string connectionid)
         {
-            _playerdictionary[connectionid] = new Player();
 
+            var temp = new Player();
+
+            _playerdictionary[connectionid] = temp;
+
+            _playerlist.Add(temp);
+
+
+        }
+
+        public void AddAI()
+        {
+            var v = new Vector2(RNG.next(1000), RNG.next(1000));
+            var temp = new Player(v);
+            _playerlist.Add(temp);
+            _ailist.Add(new AIController(temp));
 
         }
 
@@ -76,6 +111,10 @@ namespace warlocks
 
             if (_playerdictionary.ContainsKey(connectionid)){
                 var player = _playerdictionary[connectionid];
+
+                command.velocity.Normalize();
+
+                command.velocity = command.velocity * 2;
 
                 player.Update(command);
 
@@ -119,7 +158,15 @@ namespace warlocks
 
         public Player()
         {
-            this.position = new Vector2();
+            this.position = new Vector2(500,500);
+            this.view = new Vector2();
+            this.id = nextid;
+            nextid++;
+
+        }
+        public Player(Vector2 position)
+        {
+            this.position = position;
             this.view = new Vector2();
             this.id = nextid;
             nextid++;
@@ -133,6 +180,32 @@ namespace warlocks
             this.view = command.view;
             this.view.Normalize();
 
+
+        }
+
+    }
+
+    public class AIController
+    {
+        static Random _r = new Random();
+        private Player _player;
+
+        public AIController(Player player)
+        {
+            _player = player;
+
+        }
+
+        public void Think()
+        {
+            //random for now
+
+            var v1 = new Vector2(RNG.next(-5, 5), RNG.next(-5, 5));
+            var v2 = new Vector2(RNG.next(1), RNG.next(1));
+            
+            var tempcommand = new Command(v2, v1);
+
+            _player.Update(tempcommand);
 
         }
 

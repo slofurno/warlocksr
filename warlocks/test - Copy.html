@@ -58,7 +58,7 @@
                 
                 $.each(playerarray, function (index, player) {
 
-                    //console.log("WTF " + player.view.Y + "   " + player.view.X);
+                    console.log("WTF " + player.view.Y + "   " + player.view.X);
 
                     var temp = tempelements[player.id];
 
@@ -199,13 +199,11 @@
 
             hub.client.updateState = function (players) {
 
-                //console.log(players);
-
                 $.each(players, function (index, player) {
 
                     if (typeof playerarray[player.id] == 'undefined') {
 
-                        //console.log("is this even defined? " + player.id);
+                        console.log("is this even defined? " + player.id);
 
                         playerarray[parseInt(player.id)] = new Player(player.id, player.position, player.view);
 
