@@ -1,28 +1,39 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
-using System.Web;
+using System.Threading.Tasks;
+using System.Collections.Concurrent;
 using Microsoft.AspNet.SignalR;
+
 
 namespace warlocks
 {
     public class WarlocksHub : Hub
     {
+
+        private readonly WarlockGame _game;
+        public WarlocksHub() : this(Warlocks.warlockgame) { }
+        public WarlocksHub(WarlockGame game)
+        {
+            _game = game;
+        }
+
         public void Hello()
         {
             Clients.All.hello();
         }
 
-        public void StartPlayer()
+        public override Task OnConnected()
         {
 
-            Clients.Caller.setId(Warlocks.warlockgame.AddPlayer());
+            _game.AddPlayer(Context.ConnectionId);
 
+            return base.OnConnected();
         }
 
-        public void SendInput(PlayerInput someinput)
+        public void SendInput(Command command)
         {
-            Warlocks.warlockgame.ProcessInput(someinput);
+            _game.ProcessCommand(Context.ConnectionId, command);
 
         }
 

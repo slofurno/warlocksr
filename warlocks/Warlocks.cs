@@ -71,18 +71,37 @@ namespace warlocks
 			ComputeLength();
 		}
 
+        public Vector2()
+        {
+            x = 0;
+            y = 0;
+            ComputeLength();
+
+        }
+
 
         void ComputeLength()
         {
             length = Math.Sqrt(Math.Pow(x, 2) + Math.Pow(y, 2));
         }
 
-        void Normalize()
+        public void Normalize()
         {
 
-            x = x / length;
-            y = y / length;
-            ComputeLength();
+            if (length==0)
+            {
+                x = 0;
+                y = 0;
+
+            }
+            else
+            {
+
+                x = x / length;
+                y = y / length;
+                ComputeLength();
+            }
+            
         }
 
         public static Vector2 operator *(Vector2 v1, double x)
@@ -98,7 +117,7 @@ namespace warlocks
     }
 
 
-    public class Player
+    public class Player2
     {
 
         public static int nextid = 0;
@@ -118,7 +137,7 @@ namespace warlocks
         private int castability;
         private WarlockGame warlockgame;
 
-        public Player(WarlockGame game)
+        public Player2(WarlockGame game)
         {
 
             this.id = nextid;
@@ -274,7 +293,7 @@ namespace warlocks
             if (this.castability>0 && this.angularvelocity==0)
             {
                 //cast fireball
-                this.warlockgame.projectiles.Add(new Projectile(new Vector2(this.x, this.y), new Vector2(Math.Cos(this.rotation), Math.Sin(this.rotation)), this));
+                //this.warlockgame.projectiles.Add(new Projectile(new Vector2(this.x, this.y), new Vector2(Math.Cos(this.rotation), Math.Sin(this.rotation)), this));
                 this.selectedability = 0;
                 this.castability = 0;
             }

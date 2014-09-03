@@ -17,6 +17,8 @@ namespace warlocks
         public List<Player> players;
         public IHubContext hubcontext;
         public List<Projectile> projectiles;
+        //private readonly static Lazy<WarlockGame> _instance = new Lazy<WarlockGame>(() => new WarlockGame());
+        private Dictionary<string, Player> _playerdictionary;
 
         public WarlockGame()
         {
@@ -24,6 +26,8 @@ namespace warlocks
             this.players = new List<Player>();
             this.projectiles = new List<Projectile>();
             this.hubcontext = GlobalHost.ConnectionManager.GetHubContext<WarlocksHub>();
+
+            _playerdictionary = new Dictionary<string, Player>();
 
             WebApiApplication.physicsTimer = new Timer(20); //was 40
             WebApiApplication.physicsTimer.Enabled = true;
@@ -35,57 +39,29 @@ namespace warlocks
         {
             //foreach (PlayerInput q in newinputs)
             //for (var i = newinputs.Count-1; i>= 0; i--)
-            while (newinputs.Count>0)
+
+            var packetarray = new List<Player>();
+
+            foreach (var pair in _playerdictionary)
             {
-                PlayerInput currentelement;
-                bool success = newinputs.TryDequeue(out currentelement);
-
-                if (success)
-                {
-                    var temp = players.Find(x => x.id == currentelement.id);
-
-                    //var temp = players.Find(x => x.id == q.id);
-
-                    if (temp != null)
-                    {
-                        temp.ProcessInputs(currentelement);
-                        //newinputs.RemoveAt(i);
-
-                    }
-                }
-
+                Debug.WriteLine(pair.Value);
+                packetarray.Add(pair.Value);
             }
 
-            foreach (Player p in players)
-            {
-                p.Update();
-            }
-
-            foreach (Projectile p in projectiles)
-            {
-
-                p.position = p.position + (p.direction * p._velocity);
-
-            }
-
-
-            hubcontext.Clients.All.updateProjectiles(projectiles.ToArray());
-            hubcontext.Clients.All.updateState(players.ToArray());
+            //hubcontext.Clients.All.updateProjectiles(projectiles.ToArray());
+            hubcontext.Clients.All.updateState(packetarray.ToArray());
 
 
         }
 
-        public int AddPlayer()
+        public void AddPlayer(string connectionid)
         {
-            Player tempplayer = new Player(this);
-            players.Add(tempplayer);
-
-            return tempplayer.id;
+            _playerdictionary[connectionid] = new Player();
 
 
         }
 
-        public void ProcessInput(PlayerInput input)
+        public void ProcessInput(PlayerInput input, double time)
         {
             //newinputs.Add(input);
             newinputs.Enqueue(input);
@@ -93,6 +69,72 @@ namespace warlocks
 
         }
 
+        public void ProcessCommand(string connectionid, Command command)
+        {
+
+            //Debug.WriteLine("SOMETHING HAPPENING HERE");
+
+            if (_playerdictionary.ContainsKey(connectionid)){
+                var player = _playerdictionary[connectionid];
+
+                player.Update(command);
+
+            }
+            else
+            {
+                Debug.WriteLine("CANT FIND KEY");
+            }
+            
+            
+
+        }
+
+        
+
+
+    }
+
+    public class Command
+    {
+
+        public Vector2 view { get; set; }
+        public Vector2 velocity { get; set; }
+
+        public Command(Vector2 view, Vector2 vel)
+        {
+            this.view = view;
+            this.velocity = vel;
+
+        }
+
+
+    }
+
+    public class Player
+    {
+        private static int nextid = 0;
+        public Vector2 position { get; set; }
+        public Vector2 view { get; set; }
+        public int id { get; set; }
+
+        public Player()
+        {
+            this.position = new Vector2();
+            this.view = new Vector2();
+            this.id = nextid;
+            nextid++;
+
+        }
+
+        public void Update(Command command)
+        {
+
+            this.position = this.position + command.velocity;
+            this.view = command.view;
+            this.view.Normalize();
+
+
+        }
 
     }
 }
