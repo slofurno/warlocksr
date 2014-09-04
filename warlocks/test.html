@@ -14,25 +14,8 @@
     <script src="/signalr/hubs"></script>
 
 
+    <div style="z-index:-1; position:absolute;"><img SRC = "testlevel.bmp" /></div>
 
-
-    TEST?
-
-    <ul data-bind="foreach:playerList">
-        <li>
-            well, is this not gonna work or what
-            <br />
-            <span data-bind="text: position.X" style="outline: 1px dashed red;"> </span>
-            <span data-bind="text: position.Y" style="outline: 1px dashed red;"> </span>
-            <span data-bind="text: view.X" style="outline: 1px dashed red;"> </span>
-            <span data-bind="text: view.Y" style="outline: 1px dashed red;"> </span>
-        </li>
-
-
-    </ul>
-
-
-    TEST?
 
 
         <script>
@@ -71,7 +54,7 @@
                         //temp.style.top = '' + player.position.Y + 'px';
 
                         var angle = Math.round(Math.atan2(player.view.Y, player.view.X) * (180 / Math.PI));
-                        temp.style.transform = 'translate(' + player.position.X + 'px, ' + player.position.Y + 'px) translateZ(0) rotate(' + angle + 'deg)';
+                        temp.style.transform = 'translate(' + (player.position.X - 15) + 'px, ' + (player.position.Y - 15) + 'px) translateZ(0) rotate(' + angle + 'deg)';
                     
                 });
 
@@ -116,9 +99,14 @@
 
                     var gamepadarray = navigator.getGamepads();
 
+                    
+
                     if (gamepadarray.length > 0) {
 
                         var gamepad = gamepadarray[0];
+
+                        console.log(gamepad.mapping);
+
                         var buttons = gamepad.buttons;
                         var axes = gamepad.axes;
 
@@ -224,6 +212,7 @@
 
                         var newDiv = document.createElement("div");
                         newDiv.style.position = "absolute";
+                        
                         newDiv.innerHTML="<IMG SRC = 'img/person.png'>"
                         //var newContent = document.createTextNode(":D");
                         //newDiv.appendChild(newContent); //add the text node to the newly created div

@@ -8,6 +8,7 @@ using System.Configuration;
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
 using System.Collections.Concurrent;
+using System.IO;
 
 namespace warlocks
 {
@@ -21,6 +22,7 @@ namespace warlocks
         private Dictionary<string, Player> _playerdictionary;
         private List<Player> _playerlist;
         private List<AIController> _ailist;
+        private BMAP _leveldata;
         
 
         public WarlockGame()
@@ -37,6 +39,11 @@ namespace warlocks
             WebApiApplication.physicsTimer = new Timer(20); //was 40
             WebApiApplication.physicsTimer.Enabled = true;
             WebApiApplication.physicsTimer.Elapsed += new ElapsedEventHandler(Update);
+            _leveldata = new BMAP("D:/data/source/warlocks/warlocks/testlevel.bmp");
+
+            //string txtPath = Path.Combine(Environment.CurrentDirectory, "testlevel.bmp");
+
+            //_leveldata = new BMAP(txtPath);
 
         }
 
@@ -64,13 +71,15 @@ namespace warlocks
 
             if (len < 200)
             {
-                AddAI();
+                //AddAI();
                 len++;
             }
 
             for (var i = 0; i<len; i++){
-                _ailist[i].Think();
+                //_ailist[i].Think();
             }
+
+            
 
             hubcontext.Clients.All.updateState(_playerlist.ToArray());
         }
@@ -78,7 +87,7 @@ namespace warlocks
         public void AddPlayer(string connectionid)
         {
 
-            var temp = new Player();
+            var temp = new Player(this);
 
             _playerdictionary[connectionid] = temp;
 
@@ -90,7 +99,7 @@ namespace warlocks
         public void AddAI()
         {
             var v = new Vector2(RNG.next(1000), RNG.next(1000));
-            var temp = new Player(v);
+            var temp = new Player(v, this);
             _playerlist.Add(temp);
             _ailist.Add(new AIController(temp));
 
@@ -128,6 +137,17 @@ namespace warlocks
 
         }
 
+        public bool CheckLocation(Vector2 position)
+        {
+
+            if (_leveldata.getColor(position) == 0)
+            {
+                return true;
+
+            }
+            return false;
+        }
+
         
 
 
@@ -155,28 +175,51 @@ namespace warlocks
         public Vector2 position { get; set; }
         public Vector2 view { get; set; }
         public int id { get; set; }
+        private WarlockGame _world;
+        public Vector2 velocity { get; set; }
 
-        public Player()
+        public Player(WarlockGame world)
         {
-            this.position = new Vector2(500,500);
+            this.position = new Vector2(200,200);
             this.view = new Vector2();
             this.id = nextid;
             nextid++;
+            velocity = new Vector2();
+            _world = world;
 
         }
-        public Player(Vector2 position)
+        public Player(Vector2 position, WarlockGame world)
         {
             this.position = position;
             this.view = new Vector2();
             this.id = nextid;
             nextid++;
+            velocity = new Vector2();
+            _world = world;
 
         }
 
         public void Update(Command command)
         {
 
-            this.position = this.position + command.velocity;
+            var newposition = new Vector2();
+            var newvelocity = new Vector2();
+
+
+            newvelocity = this.velocity + command.velocity;
+
+            newposition = this.position + newvelocity;
+
+            
+
+
+            if (_world.CheckLocation(newposition))
+            {
+                this.position = this.position + command.velocity;
+
+            }
+
+            
 
             if (command.view.len > 0)
             {
