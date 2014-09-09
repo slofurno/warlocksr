@@ -15,25 +15,27 @@ namespace warlocks
     public class WarlockGame
     {
         public ConcurrentQueue<PlayerInput> newinputs;
-        public List<Player> players;
+        public List<Worm> players;
         public IHubContext hubcontext;
         public List<Projectile> projectiles;
         //private readonly static Lazy<WarlockGame> _instance = new Lazy<WarlockGame>(() => new WarlockGame());
-        private Dictionary<string, Player> _playerdictionary;
-        private List<Player> _playerlist;
+        private Dictionary<string, Worm> _playerdictionary;
+        private List<Worm> _playerlist;
         private List<AIController> _ailist;
         private BMAP _leveldata;
+
+        public BMAP leveldata { get { return _leveldata; } }
         
 
         public WarlockGame()
         {
             this.newinputs = new ConcurrentQueue<PlayerInput>();
-            this.players = new List<Player>();
+            this.players = new List<Worm>();
             this.projectiles = new List<Projectile>();
             this.hubcontext = GlobalHost.ConnectionManager.GetHubContext<WarlocksHub>();
 
-            _playerdictionary = new Dictionary<string, Player>();
-            _playerlist = new List<Player>();
+            _playerdictionary = new Dictionary<string, Worm>();
+            _playerlist = new List<Worm>();
             _ailist = new List<AIController>();
 
             WebApiApplication.physicsTimer = new Timer(20); //was 40
@@ -87,7 +89,7 @@ namespace warlocks
         public void AddPlayer(string connectionid)
         {
 
-            var temp = new Player(this);
+            var temp = new Worm(this);
 
             _playerdictionary[connectionid] = temp;
 
@@ -99,7 +101,7 @@ namespace warlocks
         public void AddAI()
         {
             var v = new Vector2(RNG.next(1000), RNG.next(1000));
-            var temp = new Player(v, this);
+            var temp = new Worm(v, this);
             _playerlist.Add(temp);
             _ailist.Add(new AIController(temp));
 
@@ -118,6 +120,9 @@ namespace warlocks
 
             //Debug.WriteLine("SOMETHING HAPPENING HERE");
 
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             if (_playerdictionary.ContainsKey(connectionid)){
                 var player = _playerdictionary[connectionid];
 
@@ -125,15 +130,17 @@ namespace warlocks
 
                 command.velocity = command.velocity * 2;
 
-                player.Update(command);
+                player.Update(this, command);
 
             }
             else
             {
                 Debug.WriteLine("CANT FIND KEY");
             }
-            
-            
+
+            stopwatch.Stop();
+            var elap = stopwatch.ElapsedTicks;
+            //Debug.WriteLine("elpsed time : " + elap.ToString());
 
         }
 
@@ -148,9 +155,29 @@ namespace warlocks
             return false;
         }
 
-        
+        public bool CheckLocation(int x, int y)
+        {
+
+            if (_leveldata.getColor(x, y) > 0)
+            {
+                return true;
+
+            }
+            return false;
+        }
 
 
+
+
+
+        internal void sendPixels(List<pixel> temp)
+        {
+
+            Debug.WriteLine("setting some pixles");
+
+            hubcontext.Clients.All.updatePixels(temp.ToArray());
+
+        }
     }
 
     public class Command
@@ -158,89 +185,27 @@ namespace warlocks
 
         public Vector2 view { get; set; }
         public Vector2 velocity { get; set; }
+        public int[] buttons { get; set; }
 
-        public Command(Vector2 view, Vector2 vel)
+        public Command(Vector2 view, Vector2 vel, int[] buttons)
         {
             this.view = view;
             this.velocity = vel;
+            this.buttons = buttons;
 
         }
 
 
     }
 
-    public class Player
-    {
-        private static int nextid = 0;
-        public Vector2 position { get; set; }
-        public Vector2 view { get; set; }
-        public int id { get; set; }
-        private WarlockGame _world;
-        public Vector2 velocity { get; set; }
-
-        public Player(WarlockGame world)
-        {
-            this.position = new Vector2(200,200);
-            this.view = new Vector2();
-            this.id = nextid;
-            nextid++;
-            velocity = new Vector2();
-            _world = world;
-
-        }
-        public Player(Vector2 position, WarlockGame world)
-        {
-            this.position = position;
-            this.view = new Vector2();
-            this.id = nextid;
-            nextid++;
-            velocity = new Vector2();
-            _world = world;
-
-        }
-
-        public void Update(Command command)
-        {
-
-            var newposition = new Vector2();
-            var newvelocity = new Vector2();
-
-
-            newvelocity = this.velocity + command.velocity;
-
-            newposition = this.position + newvelocity;
-
-            
-
-
-            if (_world.CheckLocation(newposition))
-            {
-                this.position = this.position + command.velocity;
-
-            }
-
-            
-
-            if (command.view.len > 0)
-            {
-                this.view = command.view;
-                this.view.Normalize();
-
-            }
-
-           
-
-
-        }
-
-    }
+    
 
     public class AIController
     {
         static Random _r = new Random();
-        private Player _player;
+        private Worm _player;
 
-        public AIController(Player player)
+        public AIController(Worm player)
         {
             _player = player;
 
@@ -253,9 +218,9 @@ namespace warlocks
             var v1 = new Vector2(RNG.next(-5, 5), RNG.next(-5, 5));
             var v2 = new Vector2(RNG.next(1), RNG.next(1));
             
-            var tempcommand = new Command(v2, v1);
+            //var tempcommand = new Command(v2, v1);
 
-            _player.Update(tempcommand);
+            //_player.Update(tempcommand);
 
         }
 

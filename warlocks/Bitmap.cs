@@ -15,9 +15,25 @@ namespace warlocks
         Bitmap _bitmap;
         int[] _intarray;
         public bool ready;
-        int _height;
-        int _width;
+        int _height=0;
+        int _width=0;
         int counter = 0;
+
+        public int height
+        {
+            get
+            {
+                return _height;
+            }
+        }
+
+        public int width
+        {
+            get
+            {
+                return _width;
+            }
+        }
 
         public BMAP(string name)
         {
@@ -122,6 +138,116 @@ namespace warlocks
 
             return result;
 
+        }
+
+
+        public int getColor(int x, int y)
+        {
+
+           
+
+            var result = 0;
+
+            if (this.ready)
+            {
+
+                if (x < 0 || y < 0 || x >= _width || y >= _height)
+                {
+                    Debug.WriteLine("out of bounds");
+
+                }
+                else
+                {
+                    result = _intarray[y * _width + x];
+
+                    //Debug.WriteLine("number : " + result);
+                }
+            }
+
+            //Debug.WriteLine("how many : " + counter);
+
+            return result;
+
+        }
+
+        public int setPixel(int x, int y, int color)
+        {
+
+
+
+            
+
+            if (this.ready)
+            {
+
+                if (x < 0 || y < 0 || x >= _width || y >= _height)
+                {
+                    Debug.WriteLine("out of bounds");
+                    
+
+                }
+                else if (_intarray[y * _width + x] == color)
+                {
+
+                    return 0;
+                    //Debug.WriteLine("number : " + result);
+                }
+                else
+                {
+                    _intarray[y * _width + x] = color;
+                    return 1;
+
+                }
+            }
+
+            //Debug.WriteLine("how many : " + counter);
+
+            return -1;
+
+        }
+
+
+
+        internal void setPixels(int iposx, int iposy, int digx, int digy, int color, WarlockGame game)
+        {
+
+            var temp = new List<pixel>();
+
+            for (int i = digx-7; i < digx+7; i++)
+            {
+                for (int j = digy-7; j < digy+7; j++)
+                {
+                    if (setPixel(i, j, color)>0){
+
+                        temp.Add(new pixel(i, j, 0));
+
+                    }
+
+                }
+
+
+            }
+
+            if (temp.Count > 0)
+            {
+
+                game.sendPixels(temp);
+            }
+               
+        }
+    }
+
+    public class pixel
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int color { get; set; }
+
+        public pixel(int x, int y, int color)
+        {
+            this.X = x;
+            this.Y = y;
+            this.color = color;
         }
 
 

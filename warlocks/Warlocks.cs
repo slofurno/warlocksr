@@ -43,10 +43,10 @@ namespace warlocks
         private float range;
         public Vector2 direction;
         public Vector2 position;
-        private Player owner;
+        private Worm owner;
         public Vector2 velocity;
 
-        public Projectile(Vector2 Position, Vector2 Direction, Player Owner)
+        public Projectile(Vector2 Position, Vector2 Direction, Worm Owner)
         {
             this.id = nextid;
             nextid++;
