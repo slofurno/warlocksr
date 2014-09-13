@@ -16,7 +16,7 @@
 
 
     <div style="z-index:-1; position:absolute;">
-        <canvas id="myCanvas" width="1000" height="1000" style="width:1000px; height:1000px;"></canvas>
+        <canvas id="myCanvas" width="1000" height="1000" style="width:2000px; height:2000px;"></canvas>
 
             
 </div>
@@ -29,9 +29,13 @@
             var iterations = 0;
             var fps = 0;
 
-            var controller = { dleft: 0, dright: 0, dup: 0, ddown: 0, rightx: 0, righty: 0, righttrigger: 0, buttons: [0,0,0,0] };
+            var tempratio = 2;
+
+            var controller = { dleft: 0, dright: 0, dup: 0, ddown: 0, rightx: 0, righty: 0, righttrigger: 0, buttons: [0,0,0,0,0] };
             var tempelements = [];
             var playerarray = [];
+
+            var objectarray = [];
 
             var c = document.getElementById("myCanvas");
             var ctx = c.getContext("2d");
@@ -69,8 +73,14 @@
                         //temp.style.top = '' + player.position.Y + 'px';
 
                         var angle = Math.round(Math.atan2(player.view.Y, player.view.X) * (180 / Math.PI));
-                        temp.style.transform = 'translate(' + (player.position.X - 15) + 'px, ' + (player.position.Y - 15) + 'px) translateZ(0) rotate(' + angle + 'deg)';
+                        temp.style.transform = 'translate(' + (player.position.X * tempratio - 15) + 'px, ' + (player.position.Y * tempratio - 15) + 'px) translateZ(0) rotate(' + angle + 'deg)';
                     
+                });
+
+                $.each(objectarray, function (index, object) {
+                    console.log("WHOA  " + object.x +   "   " + object.y)
+                    ctx.fillRect(object.x  - 1, object.y  - 1, 2, 2);
+
                 });
 
                 
@@ -108,14 +118,14 @@
                     controller.dright = 0;
                     controller.dup = 0;
                     controller.ddown = 0;
-                    controller.rightx = 0;
-                    controller.righty = 0;
+                    //controller.rightx = 0;
+                    //controller.righty = 0;
                     controller.righttrigger = 0;
                     controller.buttons[0] = 0;
                     controller.buttons[1] = 0;
                     controller.buttons[2] = 0;
                     controller.buttons[3] = 0;
-
+                    controller.buttons[4] = 0;
 
                     var gamepadarray = navigator.getGamepads();
 
@@ -142,15 +152,22 @@
 
                             if (buttons[7].value >= tolerance) {
                                 controller.righttrigger = 1;
+                                controller.buttons[4] = 1;
                             }
 
                             //chrome reads x and y from different index then firefox
                             
-
+                            /*
                             if (Math.abs(axes[2]) > tolerance) {
                                 controller.rightx = axes[2];
                             }
                             if (Math.abs(axes[3]) > tolerance) {
+                                controller.righty = axes[3];
+                            }
+                            */
+
+                            if (axes[2] * axes[2] + axes[3] * axes[3] > tolerance) {
+                                controller.rightx = axes[2];
                                 controller.righty = axes[3];
                             }
 
@@ -177,15 +194,20 @@
 
                             if (axes[4] <= -tolerance) {
                                 controller.righttrigger = 1;
+                                controller.buttons[4] = 1;
                             }
-
+                            /*
                             if (Math.abs(axes[3]) > tolerance) {
                                 controller.rightx = axes[3];
                             }
                             if (Math.abs(axes[2]) > tolerance) {
                                 controller.righty = axes[2];
                             }
-                            
+                            */
+                            if (axes[2] * axes[2] + axes[3] * axes[3] > tolerance) {
+                                controller.rightx = axes[3];
+                                controller.righty = axes[2];
+                            }
 
                         }
 
@@ -227,7 +249,22 @@
 
             });
 
-            
+            hub.client.updateObjects = function (objects) {
+
+                var temp = [];
+
+                $.each(objects, function (index, object) {
+
+                    temp.push({ x: object.x, y: object.y });
+
+
+                });
+
+                objectarray = temp;
+
+            };
+
+
 
             hub.client.updateState = function (players) {
 

@@ -24,6 +24,10 @@ namespace warlocks
         private List<AIController> _ailist;
         private BMAP _leveldata;
 
+        public ObjectList wormobjects;
+
+        
+
         public BMAP leveldata { get { return _leveldata; } }
         
 
@@ -33,6 +37,7 @@ namespace warlocks
             this.players = new List<Worm>();
             this.projectiles = new List<Projectile>();
             this.hubcontext = GlobalHost.ConnectionManager.GetHubContext<WarlocksHub>();
+            this.wormobjects = new ObjectList();
 
             _playerdictionary = new Dictionary<string, Worm>();
             _playerlist = new List<Worm>();
@@ -81,9 +86,12 @@ namespace warlocks
                 //_ailist[i].Think();
             }
 
-            
+
+            wormobjects.ProcessAll(this);
+
 
             hubcontext.Clients.All.updateState(_playerlist.ToArray());
+            hubcontext.Clients.All.updateObjects(this.wormobjects.ToArray());
         }
 
         public void AddPlayer(string connectionid)

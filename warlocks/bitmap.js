@@ -36,7 +36,7 @@ function bitmap(url) {
         
 
         self.parseContext.drawImage(self.image, 0, 0);
-        self.imageData = self.parseContext.getImageData(0, 0, self.parseCanvas.width, self.parseCanvas.height);
+        self.imageData = self.parseContext.getImageData(0, 0, self.width, self.height);
         //var tempData = self.imageData.data;
 
         self.contextdata = self.imageData.data;
@@ -125,7 +125,9 @@ bitmap.prototype.redraw = function (context) {
 
     if (this.ready) {
 
-        context.putImageData(this.imageData, 0, 0);
+        context.putImageData(this.imageData, 0, 0,0,0,this.width,this.height);
+
+        
     }
 
 };

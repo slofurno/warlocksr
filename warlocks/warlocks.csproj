@@ -164,6 +164,7 @@
     <Compile Include="WarlocksHub.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
+    <Compile Include="Weapon.cs" />
     <Compile Include="Worm.cs" />
   </ItemGroup>
   <ItemGroup>

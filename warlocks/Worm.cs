@@ -30,6 +30,7 @@ namespace warlocks
         private WarlockGame _world;
         public Vector2 velocity { get; set; }
         private int[] reacts = new int[4];
+        private Weapon tempweapon = new Weapon();
 
         public Worm(WarlockGame world)
         {
@@ -331,7 +332,12 @@ namespace warlocks
             var newposition = new Vector2();
             var newvelocity = new Vector2();
 
+            if (command.view.len > 0)
+            {
+                this.view = command.view;
+                this.view.Normalize();
 
+            }
             
 
             newposition = this.position + this.velocity;
@@ -411,18 +417,19 @@ namespace warlocks
             }
 
 
+            if (command.buttons[4]>0){
+         
+                fire(game);
+            
+            }
+
 
             processPhysics(game);
 
             processMovement(game, command);
 
 
-            if (command.view.len > 0)
-            {
-                this.view = command.view;
-                this.view.Normalize();
-
-            }
+ 
 
 
 
@@ -431,5 +438,16 @@ namespace warlocks
 
 
         public bool ableToJump { get; set; }
+
+        public void fire(WarlockGame game)
+        {
+
+            tempweapon.fire(game, this, this.position, this.view);
+
+        }
+
     }
+
+
+
 }
