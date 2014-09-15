@@ -45,7 +45,15 @@
             ctx.fillStyle = "blue";
             ctx.fillRect(0, 0, 1000, 1000);
             var level = new bitmap('testlevel.png');
-            var colorwhite = new color(255, 0, 0, 255);
+            var colorwhite = new color(0, 0, 0, 255);
+            var colorred = new color(0, 0, 255, 255);
+
+            ctx.fillStyle = "red";
+
+            var colorarray = [];
+
+            colorarray[0] = colorwhite;
+            colorarray[3] = colorred;
 
             controller.toString = function () {
 
@@ -331,7 +339,7 @@
 
                 $.each(pixels, function (index, pixel) {
 
-                    level.setPixel(pixel.X, pixel.Y, colorwhite);
+                    level.setPixel(pixel.X, pixel.Y, colorarray[pixel.color]);
                     console.log("X : " + pixel.X + "  Y:  " + pixel.Y);
 
                 });

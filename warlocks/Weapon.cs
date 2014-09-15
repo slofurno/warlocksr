@@ -21,7 +21,9 @@ namespace warlocks
             obj.velX = (3*direction.X);
             obj.velY = (3*direction.Y);
 
-            //obj.firedbyid = id;
+            
+
+            obj.firedbyid = id;
         }
 
     }
@@ -88,8 +90,9 @@ namespace warlocks
                 
 
             }
-            else if (game.leveldata.getColor(ix, iy) == (int)PIXEL.rock)
+            else if (game.leveldata.getPixel(ix, iy) != PIXEL.empty)
             {
+                
                 doExplode = true;
 
             }
@@ -120,7 +123,7 @@ namespace warlocks
 	    int ownerIdx;
 	    int curFrame;
 	    int timeLeft;
-        int firedbyid;
+        public int firedbyid;
 
         public int intX { get { return (int)this.x; } }
         public int intY { get { return (int)this.y; } }
@@ -142,10 +145,15 @@ namespace warlocks
 
             }
 
-
-            if (game.leveldata.getPixel(ix, iy) == PIXEL.empty)
+            if (game.leveldata.getPixel(ix, iy) == PIXEL.dirt)
             {
-                game.leveldata.setPixel2(ix, iy, PIXEL.dirt);
+                game.leveldata.setPixels(ix, iy, 3, 0, game);
+                //game.leveldata.setPixel2(ix, iy, PIXEL.empty);
+                doExplode = true;
+            }
+            else if (game.leveldata.getPixel(ix, iy) != PIXEL.empty)
+            {
+                
                 doExplode = true;
 
             }
@@ -154,7 +162,9 @@ namespace warlocks
             
             game.wormlist.ForEach(worm=>{
 
-                if (Worm.checkForSpecWormHit(game, ix, iy, 1.5, worm))
+                
+
+                if ((worm.id != this.firedbyid) && Worm.checkForSpecWormHit(game, ix, iy, 6, worm))
                 {
 
                     //create some bloods

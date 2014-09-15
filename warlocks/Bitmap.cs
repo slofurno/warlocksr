@@ -21,6 +21,7 @@ namespace warlocks
         int counter = 0;
 
         public int dirtycounter = 0;
+        public List<pixel> _alldirtypixels;
         private ConcurrentQueue<pixel> _dirtypixels;
         public pixel[] dirtypixels { get {
 
@@ -28,7 +29,7 @@ namespace warlocks
 
         } }
 
-        public int dirtypixellength { get { return dirtycounter; } }
+        public int dirtypixellength { get { return _dirtypixels.Count; } }
 
         public int height
         {
@@ -50,12 +51,13 @@ namespace warlocks
         {
 
             _dirtypixels = new ConcurrentQueue<pixel>();
+            _alldirtypixels = new List<pixel>();
 
             try
             {
                 System.Net.WebRequest request =
                     System.Net.WebRequest.Create(
-                    "http://warlocksr.azurewebsites.net/testlevel.bmp");
+                    "http://warlocksr.azurewebsites.net/testlevel.png");
                 System.Net.WebResponse response = request.GetResponse();
                 System.IO.Stream responseStream =
                     response.GetResponseStream();
@@ -228,18 +230,26 @@ namespace warlocks
 
 
 
-        public void setPixels(int iposx, int iposy, int digx, int digy, int color, WarlockGame game)
+        public void setPixels(int digx, int digy, int radius, int color, WarlockGame game)
         {
 
             //var temp = new List<pixel>();
 
             game.leveldataready = true;
 
-            for (int i = digx-7; i < digx+7; i++)
+            for (int i = -radius; i < radius; i++)
             {
-                for (int j = digy-7; j < digy+7; j++)
+                for (int j = -radius; j < radius; j++)
                 {
-                    setPixel(i, j, color);
+
+
+                    if (i * i + j * j <= radius * radius)
+                    {
+                        setPixel(digx + i, digy + j, color);
+
+                    }
+
+                    
 
                         //temp.Add(new pixel(i, j, 0));
 
@@ -283,7 +293,7 @@ namespace warlocks
                 }
             }
 
-            return PIXEL.empty;
+            return PIXEL.dirt;
 
         }
 
@@ -332,6 +342,23 @@ namespace warlocks
             }
 
             return true;
+        }
+
+        public pixel[] getDirtyPixels()
+        {
+
+            List<pixel> templist = new List<pixel>();
+
+            pixel temppixel;
+
+            while (_dirtypixels.TryDequeue(out temppixel))
+            {
+                templist.Add(temppixel);
+            }
+
+            _alldirtypixels.AddRange(templist);
+
+            return templist.ToArray();
         }
     }
 

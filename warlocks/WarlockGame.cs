@@ -73,7 +73,8 @@ namespace warlocks
             */
 
 
-
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
 
 
             wormobjects.processNew();
@@ -105,6 +106,11 @@ namespace warlocks
             hubcontext.Clients.All.updateBlood(this.bloodlist.ToArray());
 
             sendPixels();
+
+            stopwatch.Stop();
+            var elap = stopwatch.ElapsedTicks;
+            Debug.WriteLine("elpsed time : " + elap.ToString());
+
         }
 
         public void AddPlayer(string connectionid)
@@ -141,8 +147,7 @@ namespace warlocks
 
             //Debug.WriteLine("SOMETHING HAPPENING HERE");
 
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
+            
 
             if (_playerdictionary.ContainsKey(connectionid)){
                 var player = _playerdictionary[connectionid];
@@ -159,9 +164,7 @@ namespace warlocks
                 Debug.WriteLine("CANT FIND KEY");
             }
 
-            stopwatch.Stop();
-            var elap = stopwatch.ElapsedTicks;
-            //Debug.WriteLine("elpsed time : " + elap.ToString());
+           
 
         }
 
@@ -179,6 +182,8 @@ namespace warlocks
         public bool CheckLocation(int x, int y)
         {
 
+            //int temp = _leveldata.getColor(x, y);
+
             if (_leveldata.getColor(x, y) > 0)
             {
                 return true;
@@ -194,16 +199,23 @@ namespace warlocks
         public void sendPixels()
         {
 
-            Debug.WriteLine("setting some pixles");
+            
 
             if (leveldataready)
             {
 
+                
+
                 if (leveldata.dirtypixellength > 0)
                 {
 
-                    leveldata.dirtycounter = 0;
-                    hubcontext.Clients.All.updatePixels(leveldata.dirtypixels);
+                    Debug.WriteLine("updating some pixles");
+
+                    //leveldata.dirtycounter = 0;
+                    var pixelarray = leveldata.getDirtyPixels();
+                    
+
+                    hubcontext.Clients.All.updatePixels(pixelarray);
                 }
             }
 

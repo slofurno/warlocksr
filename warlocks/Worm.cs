@@ -237,15 +237,16 @@ namespace warlocks
        
             for(int i = 0; i < colPointCount[dir]; ++i)
             {
-                    int colX = newX + colPoints[dir,i].x;
-                    int colY = newY + colPoints[dir,i].y;
+                int colX = newX + colPoints[dir,i].x;
+                int colY = newY + colPoints[dir,i].y;
                
             
 
-                    if(!game.CheckLocation(colX, colY))
-                    {
-                            ++reacts[dir];
-                    }
+                    //if(game.CheckLocation(colX, colY))
+                if (game.leveldata.getPixel(colX, colY) != PIXEL.empty)
+                {
+                        ++reacts[dir];
+                }
             }
         }
 
@@ -297,7 +298,7 @@ namespace warlocks
                     int iposx = (int)this.position.X;
                     int iposy = (int)this.position.Y;
 
-                    game.leveldata.setPixels(iposx, iposy, digx, digy, 1, game);
+                    game.leveldata.setPixels(digx, digy, 7, 0, game);
 
 
 
