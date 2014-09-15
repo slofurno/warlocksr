@@ -17,14 +17,14 @@ namespace warlocks
         public ConcurrentQueue<PlayerInput> newinputs;
         public List<Worm> players;
         public IHubContext hubcontext;
-        public List<Projectile> projectiles;
+        public List<NObject> bloodlist;
         //private readonly static Lazy<WarlockGame> _instance = new Lazy<WarlockGame>(() => new WarlockGame());
         private Dictionary<string, Worm> _playerdictionary;
-        private List<Worm> _playerlist;
+        public List<Worm> wormlist;
         private List<AIController> _ailist;
         private BMAP _leveldata;
-
-        public ObjectList wormobjects;
+        public bool leveldataready = false;
+        public ObjectList<WObject> wormobjects;
 
         
 
@@ -35,12 +35,12 @@ namespace warlocks
         {
             this.newinputs = new ConcurrentQueue<PlayerInput>();
             this.players = new List<Worm>();
-            this.projectiles = new List<Projectile>();
+            this.bloodlist = new List<NObject>();
             this.hubcontext = GlobalHost.ConnectionManager.GetHubContext<WarlocksHub>();
-            this.wormobjects = new ObjectList();
+            this.wormobjects = new ObjectList<WObject>(()=>new WObject());
 
             _playerdictionary = new Dictionary<string, Worm>();
-            _playerlist = new List<Worm>();
+            wormlist = new List<Worm>();
             _ailist = new List<AIController>();
 
             WebApiApplication.physicsTimer = new Timer(20); //was 40
@@ -72,26 +72,39 @@ namespace warlocks
 
             */
 
-            
 
-            var len = _ailist.Count;
 
-            if (len < 200)
+
+
+            wormobjects.processNew();
+            /*
+            var temp = wormobjects.getList();
+
+            for (int i = temp.Count - 1; i >= 0; i--)
             {
-                //AddAI();
-                len++;
-            }
 
-            for (var i = 0; i<len; i++){
-                //_ailist[i].Think();
+                temp[i].process(this);
+
             }
+            */
 
 
             wormobjects.ProcessAll(this);
 
+            //bloodlist.ForEach(b=>b.process(this));
 
-            hubcontext.Clients.All.updateState(_playerlist.ToArray());
+            for (var i = bloodlist.Count - 1; i >= 0; i--)
+            {
+                bloodlist[i].Process(this);
+
+            }
+
+
+            hubcontext.Clients.All.updateState(wormlist.ToArray());
             hubcontext.Clients.All.updateObjects(this.wormobjects.ToArray());
+            hubcontext.Clients.All.updateBlood(this.bloodlist.ToArray());
+
+            sendPixels();
         }
 
         public void AddPlayer(string connectionid)
@@ -101,7 +114,7 @@ namespace warlocks
 
             _playerdictionary[connectionid] = temp;
 
-            _playerlist.Add(temp);
+            wormlist.Add(temp);
 
 
         }
@@ -110,7 +123,7 @@ namespace warlocks
         {
             var v = new Vector2(RNG.next(1000), RNG.next(1000));
             var temp = new Worm(v, this);
-            _playerlist.Add(temp);
+            wormlist.Add(temp);
             _ailist.Add(new AIController(temp));
 
         }
@@ -178,12 +191,23 @@ namespace warlocks
 
 
 
-        internal void sendPixels(List<pixel> temp)
+        public void sendPixels()
         {
 
             Debug.WriteLine("setting some pixles");
 
-            hubcontext.Clients.All.updatePixels(temp.ToArray());
+            if (leveldataready)
+            {
+
+                if (leveldata.dirtypixellength > 0)
+                {
+
+                    leveldata.dirtycounter = 0;
+                    hubcontext.Clients.All.updatePixels(leveldata.dirtypixels);
+                }
+            }
+
+            
 
         }
     }

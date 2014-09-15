@@ -32,6 +32,8 @@ namespace warlocks
         private int[] reacts = new int[4];
         private Weapon tempweapon = new Weapon();
 
+        public int weapondelayleft { get; set; }
+
         public Worm(WarlockGame world)
         {
             this.position = new Vector2(600, 300);
@@ -417,7 +419,9 @@ namespace warlocks
             }
 
 
-            if (command.buttons[4]>0){
+            processWeapons(game);
+
+            if (command.buttons[4]>0 && weapondelayleft<=0){
          
                 fire(game);
             
@@ -436,16 +440,47 @@ namespace warlocks
 
         }
 
+        private void processWeapons(WarlockGame game)
+        {
+            if (this.weapondelayleft > 0)
+            {
+                --this.weapondelayleft;
+            }
+        }
+
 
         public bool ableToJump { get; set; }
 
         public void fire(WarlockGame game)
         {
 
-            tempweapon.fire(game, this, this.position, this.view);
+            this.weapondelayleft = 5;
+
+            tempweapon.fire(game, this, this.position, this.view, this.id);
 
         }
 
+
+        public static bool checkForSpecWormHit(WarlockGame game, int x, int y, double radius, Worm worm)
+        {
+            double wormx = worm.position.X;
+            double wormy = worm.position.Y;
+
+            if (Math.Sqrt((wormx - x) * (wormx - x) + (wormy - y) * (wormy - y)) <= radius)
+            {
+
+                return true;
+
+
+            }
+
+
+            return false;
+
+        }
+
+
+        
     }
 
 

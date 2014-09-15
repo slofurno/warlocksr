@@ -36,6 +36,7 @@
             var playerarray = [];
 
             var objectarray = [];
+            var bloodarray = [];
 
             var c = document.getElementById("myCanvas");
             var ctx = c.getContext("2d");
@@ -78,8 +79,14 @@
                 });
 
                 $.each(objectarray, function (index, object) {
-                    console.log("WHOA  " + object.x +   "   " + object.y)
+                    //console.log("WHOA  " + object.x +   "   " + object.y)
                     ctx.fillRect(object.x  - 1, object.y  - 1, 2, 2);
+
+                });
+
+                $.each(bloodarray, function (index, object) {
+                    //console.log("WHOA  " + object.x + "   " + object.y)
+                    ctx.fillRect(object.x - 1, object.y - 1, 2, 2);
 
                 });
 
@@ -261,6 +268,21 @@
                 });
 
                 objectarray = temp;
+
+            };
+
+            hub.client.updateBlood = function (objects) {
+
+                var temp = [];
+
+                $.each(objects, function (index, object) {
+
+                    temp.push({ x: object.x, y: object.y });
+
+
+                });
+
+                bloodarray = temp;
 
             };
 
