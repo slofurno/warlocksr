@@ -72,10 +72,10 @@ namespace warlocks
 
             */
 
-
+            /*
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-
+            */
 
             wormobjects.processNew();
             /*
@@ -107,9 +107,11 @@ namespace warlocks
 
             sendPixels();
 
+            /*
             stopwatch.Stop();
-            var elap = stopwatch.ElapsedTicks;
-            Debug.WriteLine("elpsed time : " + elap.ToString());
+            double elap = ((double)stopwatch.ElapsedTicks/Stopwatch.Frequency);
+            Debug.WriteLine("elpsed time : " + elap.ToString() + " seconds");
+             * */
 
         }
 

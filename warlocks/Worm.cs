@@ -31,6 +31,7 @@ namespace warlocks
         public Vector2 velocity { get; set; }
         private int[] reacts = new int[4];
         private Weapon tempweapon = new Weapon();
+        public Ninjarope ninjarope;
 
         public int weapondelayleft { get; set; }
 
@@ -42,6 +43,8 @@ namespace warlocks
             nextid++;
             velocity = new Vector2();
             _world = world;
+            this.ninjarope = new Ninjarope();
+
 
         }
         public Worm(Vector2 position, WarlockGame world)
@@ -52,7 +55,7 @@ namespace warlocks
             nextid++;
             velocity = new Vector2();
             _world = world;
-
+            this.ninjarope = new Ninjarope();
         }
 
         public static class RF
@@ -121,8 +124,8 @@ namespace warlocks
         {
         //Common& common = *game.common;
 
-            int velX = (int)this.velocity.X;
-            int velY = (int)this.velocity.Y;
+            double velX = this.velocity.X;
+            double velY = this.velocity.Y;
 
             double x = this.position.X;
             double y = this.position.Y;
@@ -188,7 +191,7 @@ namespace warlocks
        
             if(reacts[RF.Up] == 0)
             {
-                    velY += 1; //GRAVITY
+                    velY += .2; //GRAVITY
             }
        
             if(velX >= 0)
@@ -261,8 +264,11 @@ namespace warlocks
             {
                 bool left = (command.velocity.X < 0);
                 bool right = (command.velocity.X > 0);
-                bool jump = (command.velocity.Y < 0);
+                bool jump = (command.buttons[1] > 0);
                 bool dig = (command.buttons[0]>0);
+                bool ropeshoot = (command.buttons[2] > 0);
+                bool up = (command.velocity.Y < 0);
+                bool down = (command.velocity.Y > 0);
 
                 if (left) {
                 
@@ -309,8 +315,8 @@ namespace warlocks
 
                 if(jump)
 		        {
-			        //ninjarope.out = false;
-			        //ninjarope.attached = false;
+			        ninjarope.isout = false;
+			        ninjarope.attached = false;
 			
 			        if((reacts[RF.Up] > 0)
 			        && (ableToJump))
@@ -323,6 +329,51 @@ namespace warlocks
 			        ableToJump = true;
                     
                
+
+                if(ninjarope.isout)
+		        {
+			        if(up)
+				        ninjarope.length -= 1; 
+			        if(down)
+				        ninjarope.length += 1;
+				
+			        if(ninjarope.length < 1)
+				        ninjarope.length = 1;
+
+                    if (ninjarope.length > 600)
+                        ninjarope.length = 600;
+			      
+		        }
+
+                if(ropeshoot){
+
+                    if (this.ableToRope)
+                    {
+
+                        this.ableToRope = false;
+
+                        ninjarope.isout = true;
+                        ninjarope.attached = false;
+
+
+
+                        ninjarope.x = this.position.X;
+                        ninjarope.y = this.position.Y;
+
+
+                        Debug.WriteLine("what?? : " + command.view.X + "   " + command.view.Y);
+
+                        ninjarope.velX = this.view.X * 4;
+                        ninjarope.velY = this.view.Y * 4;
+
+                        ninjarope.length = 20;
+                    }
+
+                }
+                else
+                {
+                    this.ableToRope = true;
+                }
                 
             }
         }
@@ -434,8 +485,8 @@ namespace warlocks
             processMovement(game, command);
 
 
- 
 
+            ninjarope.process(this, game);
 
 
 
@@ -481,7 +532,9 @@ namespace warlocks
         }
 
 
-        
+
+
+        public bool ableToRope { get; set; }
     }
 
 
