@@ -43,23 +43,34 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Bitmap.cs" />
+    <Compile Include="Game\Bitmap.cs" />
+    <Compile Include="Game\Command.cs" />
     <Compile Include="Game\Game.cs" />
-    <Compile Include="Ninjarope.cs" />
+    <Compile Include="Game\IProcessable.cs" />
+    <Compile Include="Game\Ninjarope.cs" />
+    <Compile Include="Game\NObject.cs" />
+    <Compile Include="Game\ObjectList.cs" />
+    <Compile Include="Game\Vector2.cs" />
+    <Compile Include="Game\WObject.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Socket\Websocket.cs" />
     <Compile Include="Socket\WebsocketClient.cs" />
     <Compile Include="Socket\WebsocketListener.cs" />
-    <Compile Include="Warlocks.cs" />
-    <Compile Include="WarlocksGame.cs" />
-    <Compile Include="Weapon.cs" />
-    <Compile Include="Worm.cs" />
+    <Compile Include="Game\Warlocks.cs" />
+    <Compile Include="Game\Weapon.cs" />
+    <Compile Include="Game\Worm.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="bitmap.js" />
+    <Content Include="gamepad.js" />
+    <Content Include="index.html" />
+    <Content Include="keyboard.js" />
+    <Content Include="testlevel.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

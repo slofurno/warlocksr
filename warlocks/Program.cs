@@ -23,6 +23,16 @@ namespace warlocks
 
     static void Main(string[] args)
     {
+
+      /*
+      var testlevel = File.ReadAllBytes("person.png");
+      var t = Convert.ToBase64String(testlevel);
+      using (var writer = File.CreateText("person.txt"))
+      {
+        writer.Write(t);
+      }
+      */
+
       ServicePointManager.UseNagleAlgorithm = false;
       ServicePointManager.DefaultConnectionLimit = int.MaxValue;
 
@@ -38,20 +48,21 @@ namespace warlocks
     {
       var server = new WebsocketListener(1616);
       server.Start();
+      int nextid = 0;
 
       while (true)
       {
         var client = await server.AcceptWebsocketClientAsync();
-        AcceptWebsocket(client);
+        AcceptWebsocket(client, nextid);
+        ++nextid;
 
       }
     }
 
-    static async Task AcceptWebsocket(WebsocketClient client)
+    static async Task AcceptWebsocket(WebsocketClient client, int nextid)
     {
       var ws = await client.UpgradeAsync();
-      ws.Write("hello");
-      ws.Write("xD");
+      ws.Id = nextid;
 
       _connections.Enqueue(ws);
 

@@ -4,34 +4,35 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 
-namespace warlocks
+namespace warlocks.Game
 {
   public class Ninjarope
   {
 
-    public Ninjarope()
-    {
-
-
-      this.attached = false;
-      this.isout = false;
-
-    }
-
+    public bool attached { get; set; }
+    public int length { get; set; }
     public bool isout;
     public double x;
     public double y;
     public double velX;
     public double velY;
 
-    public void process(Worm owner, WarlockGame game)
+    public Ninjarope()
     {
+      this.attached = false;
+      this.isout = false;
+    }
 
+    public string ToJson()
+    {
+      return "{\"x\":" + this.x + ",\"y\":" + this.y + ",\"isout\":" + "\"" + this.isout + "\"}";
+    }
+
+    public void process(Worm owner, WGame game)
+    {
 
       if (isout)
       {
-
-
 
         x += velX;
         y += velY;
@@ -39,10 +40,7 @@ namespace warlocks
         int ix = (int)x;
         int iy = (int)y;
 
-
-
         double forceX, forceY;
-
         double diffX = (x - owner.position.X);
         double diffY = (y - owner.position.Y);
 
@@ -75,10 +73,7 @@ namespace warlocks
           {
             length = (int)(curLen * .7);
             attached = true;
-
-
           }
-
 
           velX = 0;
           velY = 0;
@@ -92,12 +87,8 @@ namespace warlocks
         if (attached)
         {
           // curLen can't be 0
-
           if (curLen > length)
           {
-
-            Debug.WriteLine("x " + forceX / curLen + "   y: " + forceY / curLen);
-
             owner.velocity.X += forceX / curLen;
             owner.velocity.Y += forceY / curLen;
           }
@@ -105,7 +96,6 @@ namespace warlocks
         else
         {
           //velY += .05; //gravity
-
           if (curLen > length)
           {
             //velX -= forceX / curLen;
@@ -116,9 +106,5 @@ namespace warlocks
     }
 
 
-
-    public bool attached { get; set; }
-
-    public int length { get; set; }
   }
 }

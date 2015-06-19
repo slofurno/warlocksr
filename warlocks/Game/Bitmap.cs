@@ -6,8 +6,9 @@ using System.Drawing;
 using System.Diagnostics;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.IO;
 
-namespace warlocks
+namespace warlocks.Game
 {
   public class BMAP
   {
@@ -56,33 +57,16 @@ namespace warlocks
       _dirtypixels = new ConcurrentQueue<pixel>();
       _alldirtypixels = new List<pixel>();
 
-      try
+      using (var fs = File.OpenRead(name))
       {
-        System.Net.WebRequest request =
-            System.Net.WebRequest.Create(
-            "http://warlocksr.azurewebsites.net/testlevel.png");
-        System.Net.WebResponse response = request.GetResponse();
-        System.IO.Stream responseStream =
-            response.GetResponseStream();
-        _bitmap = new Bitmap(responseStream);
-
-
-      }
-      catch (System.Net.WebException)
-      {
-        Debug.WriteLine("this diddnt work...");
+        _bitmap = new Bitmap(fs);
       }
 
+      this.processBitmap();
 
+      //Thread newThread = new Thread(this.processBitmap);
+      //newThread.Start();
 
-      //_bitmap = new Bitmap(name);
-
-
-      Thread newThread = new Thread(this.processBitmap);
-
-      newThread.Start();
-
-      //processBitmap();
 
     }
 
@@ -233,7 +217,7 @@ namespace warlocks
 
 
 
-    public void setPixels(int digx, int digy, int radius, int color, WarlockGame game)
+    public void setPixels(int digx, int digy, int radius, int color, WGame game)
     {
 
       //var temp = new List<pixel>();
@@ -391,6 +375,11 @@ namespace warlocks
       this.X = x;
       this.Y = y;
       this.color = color;
+    }
+
+    public string ToJson()
+    {
+      return "{\"X\":" + this.X + ",\"Y\":" + this.Y + ",\"color\":" + this.color + "}";
     }
 
 

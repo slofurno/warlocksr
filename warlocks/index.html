@@ -1,0 +1,275 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+
+  <script src="bitmap.js"></script>
+  <script src="keyboard.js"></script>
+
+  <div style="z-index:-1; position:absolute;">
+    <canvas id="liero" width="1000" height="1000" style="width:2000px; height:2000px;"></canvas>
+
+
+  </div>
+
+
+
+  <script>
+
+    "use strict";
+
+    var starttime;
+    var iterations = 0;
+    var fps = 0;
+
+    var tempratio = 2;
+
+    var tempelements = [];
+    var playerarray = [];
+
+    var objectarray = [];
+    var bloodarray = [];
+
+    var c = document.getElementById("liero");
+    var ctx = c.getContext("2d");
+    ctx.clearRect(0, 0, 1000, 1000);
+
+    ctx.fillStyle = "blue";
+    ctx.fillRect(0, 0, 1000, 1000);
+    var level = new bitmap();
+    var colorwhite = new color(0, 0, 0, 255);
+    var colorred = new color(0, 0, 255, 255);
+
+    ctx.fillStyle = "red";
+
+    var colorarray = [];
+
+    colorarray[0] = colorwhite;
+    colorarray[3] = colorred;
+
+
+    var playerState = { view: { x: 1, y: 1 } };
+
+    var UP = 1;
+    var DOWN = 2;
+    var LEFT = 4;
+    var RIGHT = 8;
+    var SHOOT = 16;
+    var JUMP = 32;
+    var ROPE = 64;
+
+
+    function handleInput() {
+      var buttons = 0;
+      var ks = keyboard.getState();
+
+      var view = playerState.view;
+      var ps = "";
+
+      if (ks.left && ks.right) {
+        //
+      } else if (ks.left) {
+        view.x = -50;
+      } else if (ks.right) {
+        view.x = 50;
+      }
+
+      if (ks.up && view.y < 50) {
+        view.y++;
+      } else if (ks.down && view.y > -50) {
+        view.y--;
+      }
+
+      if (ks.up) {
+        buttons |= UP;
+      }
+      if (ks.down) {
+        buttons |= DOWN;
+      }
+      if (ks.left) {
+        buttons |= LEFT;
+      }
+      if (ks.right) {
+        buttons |= RIGHT;
+      }
+      if (ks.shoot) {
+        buttons |= SHOOT;
+      }
+      if (ks.jump) {
+        buttons |= JUMP;
+      }
+      if (ks.rope) {
+        buttons |= ROPE;
+      }
+
+      ps += view.x + '|';
+      ps += view.y + '|';
+      ps += buttons;
+
+      ws.send(ps);
+
+    }
+
+    function tick() {
+      window.requestAnimationFrame(tick);
+
+      handleInput();
+
+      level.redraw(ctx);
+
+      playerarray.forEach(function(player){
+
+
+        var temp = tempelements[player.id];
+
+        var angle = Math.round(Math.atan2(player.view.Y, player.view.X) * (180 / Math.PI));
+        temp.style.transform = 'translate(' + (player.position.X * tempratio - 15) + 'px, ' + (player.position.Y * tempratio - 15) + 'px) translateZ(0) rotate(' + angle + 'deg)';
+
+        if (player.ninjarope.isout) {
+
+          ctx.beginPath();
+          ctx.moveTo(parseInt(player.position.X), parseInt(player.position.Y));
+          ctx.lineTo(parseInt(player.ninjarope.x), parseInt(player.ninjarope.y));
+          ctx.stroke();
+
+        }
+
+      });
+
+      objectarray.forEach(function(object){
+        ctx.fillRect(object.x - 1, object.y - 1, 2, 2);
+
+      });
+
+      bloodarray.forEach(function(object){
+        ctx.fillRect(object.x - 1, object.y - 1, 2, 2);
+
+      });
+
+      iterations++;
+      var currenttime = new Date;
+
+      fps = (iterations / (currenttime - starttime)) * 1000;
+
+    }
+
+
+    var ws = new WebSocket("ws://localhost:1616/");
+
+    ws.onopen = function (e) {
+      starttime = new Date;
+      level.test(colorwhite);
+      tick();
+    };
+
+    ws.onmessage = function (e) {
+      var update = JSON.parse(e.data);
+      updateObjects(update.objects);
+      updateBlood(update.blood);
+      updateWorms(update.worms);
+      updatePixels(update.pixels);
+
+    };
+
+    function updateObjects(objects) {
+
+      var temp = [];
+
+      objects.forEach(function (object) {
+        temp.push({ x: object.x, y: object.y });
+
+      });
+
+      objectarray = temp;
+
+    }
+
+    function updateBlood(objects) {
+
+      var temp = [];
+
+      objects.forEach(function (object) {
+        temp.push({ x: object.x, y: object.y });
+
+      });
+      bloodarray = temp;
+
+    }
+
+
+    function updateWorms(players) {
+
+
+      players.forEach(function (player) {
+        if (typeof playerarray[player.id] == 'undefined') {
+          playerarray[parseInt(player.id)] = new Player(player.id, player.position, player.view, player.ninjarope);
+          var newDiv = document.createElement("div");
+          newDiv.style.position = "absolute";
+          newDiv.innerHTML = "<IMG SRC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAadEVYdFNvZnR3YXJlAFBhaW50Lk5FVCB2My41LjEwMPRyoQAAAPRJREFUSEvtzUsSwyAMBFGOnpvjMgYzklr4s8rCi1dlOpAptdZXyq/Uwf82P7VZGK/oaBw/r3UhNBhXaHSA612MIazQmIInXYwhrNCYgiddjCGs0JiCJ12MIWRoiMSnITQYCY1k5jP7HwojoYGMf0swEhpQ9ro5IIyExnZwVWBsMJLnowPGbzj3bnSIMYTM3wzfH8f4DedoeAdXBcYGI6FRZa+bA8JIaCzj3xKMhAYy/i3BSGgg498SjBka8eyb8antEMIKDXnz/vmss8EcrtCQd9w1z8Q8aL2FxoZ577zuzIPW29ajO/k05kHrI/no4JMeatkAhwdFpFX2aakAAAAASUVORK5CYII='>";
+
+          tempelements[player.id] = newDiv;
+          document.body.appendChild(newDiv);
+        }  else {
+
+          playerarray[player.id].update(player.position, player.view, player.ninjarope);
+        }
+
+
+      });
+
+    }
+
+
+   function updatePixels(pixels) {
+
+     pixels.forEach(function (pixel) {
+       level.setPixel(pixel.X, pixel.Y, colorarray[pixel.color]);
+
+     });
+     
+    }
+
+    function Vector2(x, y) {
+      this.X = x;
+      this.Y = y;
+    }
+
+    function Player(id, position, view, ninjarope) {
+
+      this.id = parseInt(id);
+      this.position = new Vector2(position.X, position.Y);
+      this.view = new Vector2(view.X, view.Y);
+      this.ninjarope = ninjarope;
+
+      this.update = function (newposition, newview, ninjarope) {
+
+        this.position.X = newposition.X;
+        this.position.Y = newposition.Y;
+        this.view.X = newview.X;
+        this.view.Y = newview.Y;
+        this.ninjarope = ninjarope;
+
+
+      };
+    }
+
+
+
+
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

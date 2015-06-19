@@ -4,7 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Diagnostics;
 
-namespace warlocks
+namespace warlocks.Game
 {
 
   struct Point
@@ -43,7 +43,7 @@ namespace warlocks
     public Vector2 position { get; set; }
     public Vector2 view { get; set; }
     public int id { get; set; }
-    private WarlockGame _world;
+    private WGame _world;
     public Vector2 velocity { get; set; }
     private int[] reacts = new int[4];
     private Weapon tempweapon = new Weapon();
@@ -82,19 +82,18 @@ namespace warlocks
 
     public int weapondelayleft { get; set; }
 
-    public Worm(WarlockGame world)
+    public Worm(WGame world, int id)
     {
       this.position = new Vector2(600, 300);
       this.view = new Vector2();
-      this.id = nextid;
-      nextid++;
+      this.id = id;
       velocity = new Vector2();
       _world = world;
       this.ninjarope = new Ninjarope();
 
 
     }
-    public Worm(Vector2 position, WarlockGame world)
+    public Worm(Vector2 position, WGame world)
     {
       this.position = position;
       this.view = new Vector2();
@@ -103,6 +102,14 @@ namespace warlocks
       velocity = new Vector2();
       _world = world;
       this.ninjarope = new Ninjarope();
+    }
+
+    public string ToJson()
+    {
+      return "{\"position\":" + this.position.ToJson() +
+        ",\"ninjarope\":" + this.ninjarope.ToJson() +
+        ",\"view\":" + this.view.ToJson() +
+        ",\"id\":" + this.id + "}";
     }
 
     public static class RF
@@ -167,7 +174,7 @@ namespace warlocks
                 7
         };
 
-    public void processPhysics(WarlockGame game)
+    public void processPhysics(WGame game)
     {
       //Common& common = *game.common;
 
@@ -275,11 +282,9 @@ namespace warlocks
     }
 
 
-    public void calculateReactionForce(WarlockGame game, int newX, int newY, int dir)
+
+    public void calculateReactionForce(WGame game, int newX, int newY, int dir)
     {
-
-
-
 
       reacts[dir] = 0;
 
@@ -290,9 +295,6 @@ namespace warlocks
         int colX = newX + colPoints[dir, i].x;
         int colY = newY + colPoints[dir, i].y;
 
-
-
-        //if(game.CheckLocation(colX, colY))
         if (game.leveldata.getPixel(colX, colY) != PIXEL.empty)
         {
           ++reacts[dir];
@@ -301,21 +303,20 @@ namespace warlocks
     }
 
 
-
-    void processMovement(WarlockGame game, Command command)
+    void processMovement(WGame game, Command command)
     {
 
       var movable = true;
 
       if (movable)
       {
-        bool left = (command.velocity.X < 0);
-        bool right = (command.velocity.X > 0);
-        bool jump = (command.buttons[1] > 0);
-        bool dig = (command.buttons[0] > 0);
-        bool ropeshoot = (command.buttons[2] > 0);
-        bool up = (command.velocity.Y < 0);
-        bool down = (command.velocity.Y > 0);
+        bool left = (command.Buttons & Buttons.LEFT)==Buttons.LEFT;
+        bool right = (command.Buttons & Buttons.RIGHT) > 0;
+        bool jump = (command.Buttons & Buttons.JUMP) > 0;
+        bool dig = (command.Buttons & Buttons.DIG ) == Buttons.DIG;
+        bool ropeshoot = (command.Buttons & Buttons.ROPE) > 0;
+        bool up = (command.Buttons & Buttons.UP) > 0;
+        bool down = (command.Buttons & Buttons.DOWN)>0;
 
         if (left)
         {
@@ -405,13 +406,8 @@ namespace warlocks
             ninjarope.isout = true;
             ninjarope.attached = false;
 
-
-
             ninjarope.x = this.position.X;
             ninjarope.y = this.position.Y;
-
-
-            Debug.WriteLine("what?? : " + command.view.X + "   " + command.view.Y);
 
             ninjarope.velX = this.view.X * 4;
             ninjarope.velY = this.view.Y * 4;
@@ -430,22 +426,19 @@ namespace warlocks
 
 
 
-    public void Update(WarlockGame game, Command command)
+    public void Update(WGame game, Command command)
     {
 
       var newposition = new Vector2();
       var newvelocity = new Vector2();
 
-      if (command.view.len > 0)
+      if (command.View.len > 0)
       {
-        this.view = command.view;
+        this.view = command.View;
         this.view.Normalize();
-
       }
 
-
       newposition = this.position + this.velocity;
-
 
       int iNextX = (int)newposition.X;
       int iNextY = (int)newposition.Y;
@@ -520,30 +513,21 @@ namespace warlocks
         }
       }
 
-
       processWeapons(game);
 
-      if (command.buttons[4] > 0 && weapondelayleft <= 0)
+      if ((command.Buttons&Buttons.SHOOT) > 0 && weapondelayleft <= 0)
       {
-
         fire(game);
 
       }
 
-
       processPhysics(game);
-
       processMovement(game, command);
-
-
-
       ninjarope.process(this, game);
-
-
 
     }
 
-    private void processWeapons(WarlockGame game)
+    private void processWeapons(WGame game)
     {
       if (this.weapondelayleft > 0)
       {
@@ -554,7 +538,7 @@ namespace warlocks
 
     public bool ableToJump { get; set; }
 
-    public void fire(WarlockGame game)
+    public void fire(WGame game)
     {
 
       this.weapondelayleft = 5;
@@ -564,7 +548,7 @@ namespace warlocks
     }
 
 
-    public static bool checkForSpecWormHit(WarlockGame game, int x, int y, double radius, Worm worm)
+    public static bool checkForSpecWormHit(WGame game, int x, int y, double radius, Worm worm)
     {
       double wormx = worm.position.X;
       double wormy = worm.position.Y;

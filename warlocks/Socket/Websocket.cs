@@ -13,6 +13,7 @@ namespace warlocks.Socket
 
     private Stream _rw;
     private TcpClient _client;
+    public int Id { get; set; }
 
     public Websocket(TcpClient client, Stream rw)
     {
