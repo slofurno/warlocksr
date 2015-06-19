@@ -16,9 +16,9 @@ namespace warlocks.Game
 
     private Dictionary<int, Worm> _playerdictionary;
     private BMAP _leveldata;
+    private List<Pixel>[] _history;
 
     public ObjectList<WObject> wormobjects;
-    public bool leveldataready = false;
     private ConcurrentQueue<Websocket> _connections;
 
     public BMAP leveldata { get { return _leveldata; } }
@@ -39,6 +39,14 @@ namespace warlocks.Game
       _leveldata = new BMAP("testlevel.bmp");
       bloodlist = new List<NObject>();
       this.wormobjects = new ObjectList<WObject>(() => new WObject());
+      _history = new List<Pixel>[32];
+
+      for (int i = 0; i < 32; i++)
+			{
+        _history[i] = new List<Pixel>();
+			}
+
+       
 
     }
 
@@ -63,6 +71,7 @@ namespace warlocks.Game
       const double dt = 1000D / 60;
       double t = 0;
       double accumulator = 0;
+      int frame = 0;
 
       while (true)
       {
@@ -78,6 +87,14 @@ namespace warlocks.Game
           var en = _connections.GetEnumerator();
           
           while (en.MoveNext()){
+
+            if (en.Current.Available() == 0)
+            {
+              continue;
+            }
+
+            var last = en.Current.LastUpdate;
+
             while (en.Current.Available() > 0)
             {
               var next = en.Current.ReadFrame();
@@ -93,15 +110,30 @@ namespace warlocks.Game
                 }
                 player.Update(this, command.Command);
               }
-
             }
 
+            var missed = new List<Pixel>();
+
+            if ((frame - last) > 31)
+            {
+              missed = leveldata._alldirtypixels;
+            }
+            else
+            {
+               for (var i = last; i < frame; i++)
+            {
+              missed.AddRange(_history[i & 31]);
+            }
+            }
+           
+            
             var worms = "[" + string.Join(",", wormList.Select(x => x.ToJson()).ToArray()) + "]";
             var blood = "[" + string.Join(",", bloodlist.Select(x => x.ToJson()).ToArray()) + "]";
             var objects = "[" + string.Join(",", wormobjects.getList().Select(x => x.ToJson()).ToArray()) + "]";
-            var pixels = "[" + string.Join(",", leveldata.getDirtyPixels().Select(x => x.ToJson())) + "]";
+            var pixels = "[" + string.Join(",", missed.Select(x => x.ToJson())) + "]";
             var update = "{\"worms\":" + worms + ",\"blood\":" + blood + ",\"objects\":" + objects + ",\"pixels\":" + pixels + "}";
 
+            en.Current.LastUpdate = frame;
             en.Current.Write(update);
           }
 
@@ -114,8 +146,14 @@ namespace warlocks.Game
 
           }
 
+          var dirtypixels = leveldata.getDirtyPixels();
+          var index = frame & 31;
+          _history[index].Clear();
+          _history[index].AddRange(dirtypixels);
+
           runtime.Stop();
           Console.WriteLine(runtime.Elapsed.TotalMilliseconds);
+          ++frame;
 
         }
       }

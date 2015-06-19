@@ -13,7 +13,10 @@ namespace warlocks.Socket
 
     private Stream _rw;
     private TcpClient _client;
+
+    //TODO:move these
     public int Id { get; set; }
+    public int LastUpdate { get; set; }
 
     public Websocket(TcpClient client, Stream rw)
     {
@@ -23,18 +26,23 @@ namespace warlocks.Socket
 
     public void Write(string s)
     {
-      const int headersize = 4;
+      const int headersize = 10;
       var bytes = Encoding.UTF8.GetBytes(s);
       var len = bytes.Length;
 
-      var llen = (byte)((len >> 8) & 255);
-      var rlen = (byte)(len & 255);
-
       var buffer = new byte[len + headersize];
       buffer[0] = 129;
-      buffer[1] = 126;
-      buffer[2] = llen;
-      buffer[3] = rlen;
+      buffer[1] = 127;
+
+      buffer[2] = 0;
+      buffer[3] = 0;
+      buffer[4] = 0;
+      buffer[5] = 0;
+
+      buffer[6] = 0;
+      buffer[7] = (byte)((len >> 16) & 255);
+      buffer[8] = (byte)((len >> 8) & 255);
+      buffer[9] = (byte)(len & 255);
 
       Array.Copy(bytes, 0, buffer, headersize, len);
 

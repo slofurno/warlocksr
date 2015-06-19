@@ -9,7 +9,7 @@
   <script src="keyboard.js"></script>
 
   <div style="z-index:-1; position:absolute;">
-    <canvas id="liero" width="1000" height="1000" style="width:2000px; height:2000px;"></canvas>
+    <canvas id="liero" width="1000" height="1000" style="width:2000px; height:2000px;background-color:sandybrown"></canvas>
 
 
   </div>
@@ -39,14 +39,16 @@
     ctx.fillStyle = "blue";
     ctx.fillRect(0, 0, 1000, 1000);
     var level = new bitmap();
-    var colorwhite = new color(0, 0, 0, 255);
+    var black = new color(0, 0, 0, 255);
     var colorred = new color(0, 0, 255, 255);
+    var transparent = new color(0, 0, 0, 0);
 
     ctx.fillStyle = "red";
 
+
     var colorarray = [];
 
-    colorarray[0] = colorwhite;
+    colorarray[0] = transparent;
     colorarray[3] = colorred;
 
 
@@ -60,6 +62,8 @@
     var JUMP = 32;
     var ROPE = 64;
 
+    var angle = 0;
+    var xdir = 1;
 
     function handleInput() {
       var buttons = 0;
@@ -71,17 +75,40 @@
       if (ks.left && ks.right) {
         //
       } else if (ks.left) {
-        view.x = -50;
+        //view.x = -50;
+        xdir = -1;
       } else if (ks.right) {
-        view.x = 50;
+        //view.x = 50;
+        xdir = 1;
       }
 
+      if (ks.down && angle < 90) {
+        angle += 2;
+      } else if (ks.up && angle > -90) {
+        angle -= 2;
+      }
+
+      var aa = angle;
+
+      if (xdir === 1) {
+
+      } else {
+        aa = 180 - aa;
+      }
+
+      aa *= Math.PI / 180;
+
+      view.x = Math.cos(aa);
+      view.y = Math.sin(aa);
+
+
+      /*
       if (ks.up && view.y < 50) {
         view.y++;
       } else if (ks.down && view.y > -50) {
         view.y--;
       }
-
+      */
       if (ks.up) {
         buttons |= UP;
       }
@@ -128,7 +155,7 @@
         temp.style.transform = 'translate(' + (player.position.X * tempratio - 15) + 'px, ' + (player.position.Y * tempratio - 15) + 'px) translateZ(0) rotate(' + angle + 'deg)';
 
         if (player.ninjarope.isout) {
-
+          ctx.strokeStyle = "slategray";
           ctx.beginPath();
           ctx.moveTo(parseInt(player.position.X), parseInt(player.position.Y));
           ctx.lineTo(parseInt(player.ninjarope.x), parseInt(player.ninjarope.y));
@@ -160,11 +187,12 @@
 
     ws.onopen = function (e) {
       starttime = new Date;
-      level.test(colorwhite);
+      level.test(transparent);
       tick();
     };
 
     ws.onmessage = function (e) {
+      //console.log(e.data);
       var update = JSON.parse(e.data);
       updateObjects(update.objects);
       updateBlood(update.blood);

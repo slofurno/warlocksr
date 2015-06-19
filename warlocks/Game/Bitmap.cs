@@ -21,9 +21,9 @@ namespace warlocks.Game
     int counter = 0;
 
     public int dirtycounter = 0;
-    public List<pixel> _alldirtypixels;
-    private ConcurrentQueue<pixel> _dirtypixels;
-    public pixel[] dirtypixels
+    public List<Pixel> _alldirtypixels;
+    private ConcurrentQueue<Pixel> _dirtypixels;
+    public Pixel[] dirtypixels
     {
       get
       {
@@ -51,11 +51,13 @@ namespace warlocks.Game
       }
     }
 
+
     public BMAP(string name)
     {
 
-      _dirtypixels = new ConcurrentQueue<pixel>();
-      _alldirtypixels = new List<pixel>();
+      _dirtypixels = new ConcurrentQueue<Pixel>();
+      _alldirtypixels = new List<Pixel>();
+
 
       using (var fs = File.OpenRead(name))
       {
@@ -93,61 +95,25 @@ namespace warlocks.Game
           if ((pixelcolor.B == 255) && (pixelcolor.R == 255) && (pixelcolor.G == 255))
           {
 
-            _intarray[i * width + j] = 0;
+            _intarray[i * width + j] = 1;
 
           }
           else
           {
-            _intarray[i * width + j] = 1;
+            _intarray[i * width + j] = 0;
           }
 
           counter++;
-
         }
-
-
       }
 
       this.ready = true;
 
     }
 
-    public int getColor(Vector2 pos)
-    {
-
-      int x = (int)pos.X;
-      int y = (int)pos.Y;
-
-      var result = 0;
-
-      if (this.ready)
-      {
-
-        if (x < 0 || y < 0 || x >= _width || y >= _height)
-        {
-          Debug.WriteLine("out of bounds");
-
-        }
-        else
-        {
-          result = _intarray[y * _width + x];
-
-          Debug.WriteLine("number : " + result);
-        }
-      }
-
-      Debug.WriteLine("how many : " + counter);
-
-      return result;
-
-    }
-
 
     public int getColor(int x, int y)
     {
-
-
-
       var result = 0;
 
       if (this.ready)
@@ -175,60 +141,35 @@ namespace warlocks.Game
     public int setPixel(int x, int y, int color)
     {
 
-
-
-
-
-      if (this.ready)
+      if (x < 0 || y < 0 || x >= _width || y >= _height)
       {
 
-
-
-        if (x < 0 || y < 0 || x >= _width || y >= _height)
-        {
-          Debug.WriteLine("out of bounds");
-
-
-        }
-        else if (_intarray[y * _width + x] == color)
-        {
-
-          return 0;
-          //Debug.WriteLine("number : " + result);
-        }
-        else
-        {
-          _intarray[y * _width + x] = color;
-
-          _dirtypixels.Enqueue(new pixel(x, y, color));
-
-          dirtycounter++;
-
-          return 1;
-
-        }
       }
+      else if (_intarray[y * _width + x] == color)
+      {
+        return 0;
+      }
+      else
+      {
+        _intarray[y * _width + x] = color;
+        _dirtypixels.Enqueue(new Pixel(x, y, color));
+        dirtycounter++;
 
-      //Debug.WriteLine("how many : " + counter);
-
+        return 1;
+      }
       return -1;
 
     }
 
 
 
-    public void setPixels(int digx, int digy, int radius, int color, WGame game)
+    public void setPixels(int digx, int digy, int radius, int color)
     {
-
-      //var temp = new List<pixel>();
-
-      game.leveldataready = true;
 
       for (int i = -radius; i < radius; i++)
       {
         for (int j = -radius; j < radius; j++)
         {
-
 
           if (i * i + j * j <= radius * radius)
           {
@@ -236,24 +177,8 @@ namespace warlocks.Game
 
           }
 
-
-
-          //temp.Add(new pixel(i, j, 0));
-
-
-
         }
-
-
       }
-      /*
-      if (temp.Count > 0)
-      {
-
-          game.sendPixels(temp);
-      }
-       * */
-
 
 
     }
@@ -261,26 +186,19 @@ namespace warlocks.Game
     public PIXEL getPixel(int x, int y)
     {
 
-      if (this.ready)
-      {
-
         if (x < 0 || y < 0 || x >= _width || y >= _height)
         {
           Debug.WriteLine("out of bounds");
-
-
-
+          return PIXEL.rock;
 
         }
         else
         {
-          return (PIXEL)_intarray[y * _width + x];
-
-          //Debug.WriteLine("number : " + result);
+          var i = _intarray[y * _width + x];
+          var pixel = (PIXEL)i;
+          return pixel;
+          //return (PIXEL)_intarray[y * _width + x];
         }
-      }
-
-      return PIXEL.dirt;
 
     }
 
@@ -308,7 +226,7 @@ namespace warlocks.Game
         {
           _intarray[y * _width + x] = color;
 
-          _dirtypixels.Enqueue(new pixel(x, y, color));
+          _dirtypixels.Enqueue(new Pixel(x, y, color));
 
           return;
 
@@ -331,12 +249,12 @@ namespace warlocks.Game
       return true;
     }
 
-    public pixel[] getDirtyPixels()
+    public Pixel[] getDirtyPixels()
     {
 
-      List<pixel> templist = new List<pixel>();
+      List<Pixel> templist = new List<Pixel>();
 
-      pixel temppixel;
+      Pixel temppixel;
 
       while (_dirtypixels.TryDequeue(out temppixel))
       {
@@ -350,38 +268,5 @@ namespace warlocks.Game
   }
 
 
-  public static class PIXEL2
-  {
-    public const int empty = 0;
-    public const int dirt = 1;
-    public const int rock = 2;
-    public const int Right = 3;
 
-  }
-
-  public enum PIXEL { empty, dirt, rock, blood };
-
-
-  public class pixel
-  {
-    public int X { get; set; }
-    public int Y { get; set; }
-    public int color { get; set; }
-
-
-
-    public pixel(int x, int y, int color)
-    {
-      this.X = x;
-      this.Y = y;
-      this.color = color;
-    }
-
-    public string ToJson()
-    {
-      return "{\"X\":" + this.X + ",\"Y\":" + this.Y + ",\"color\":" + this.color + "}";
-    }
-
-
-  }
 }

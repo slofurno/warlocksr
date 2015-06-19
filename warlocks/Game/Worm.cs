@@ -16,26 +16,7 @@ namespace warlocks.Game
       this.x = x;
       this.y = y;
     }
-
-
-
   };
-
-
-  public class WormDTO
-  {
-
-    public int x;
-    public int y;
-    public int viewx;
-
-    public WormDTO(Worm worm)
-    {
-
-
-    }
-
-  }
 
   public class Worm
   {
@@ -46,39 +27,10 @@ namespace warlocks.Game
     private WGame _world;
     public Vector2 velocity { get; set; }
     private int[] reacts = new int[4];
-    private Weapon tempweapon = new Weapon();
+    private Weapon tempweapon = new Weapon() { Bounce = 3 };
     public Ninjarope ninjarope { get; set; }
     private bool ableToRope { get; set; }
-
-    public bool drawninjarope
-    {
-
-      get
-      {
-        return (this.ninjarope.isout && this.ninjarope.attached);
-
-      }
-
-    }
-
-    public int ropeX
-    {
-      get
-      {
-        return (int)this.ninjarope.x;
-      }
-      set { }
-
-    }
-    public int ropeY
-    {
-      get
-      {
-        return (int)this.ninjarope.y;
-      }
-      set { }
-
-    }
+    public int activeWeapon { get; set; }
 
     public int weapondelayleft { get; set; }
 
@@ -311,12 +263,12 @@ namespace warlocks.Game
       if (movable)
       {
         bool left = (command.Buttons & Buttons.LEFT)==Buttons.LEFT;
-        bool right = (command.Buttons & Buttons.RIGHT) > 0;
-        bool jump = (command.Buttons & Buttons.JUMP) > 0;
+        bool right = (command.Buttons & Buttons.RIGHT) == Buttons.RIGHT;
+        bool jump = (command.Buttons & Buttons.JUMP) ==Buttons.JUMP;
         bool dig = (command.Buttons & Buttons.DIG ) == Buttons.DIG;
-        bool ropeshoot = (command.Buttons & Buttons.ROPE) > 0;
-        bool up = (command.Buttons & Buttons.UP) > 0;
-        bool down = (command.Buttons & Buttons.DOWN)>0;
+        bool ropeshoot = (command.Buttons & Buttons.ROPE) ==Buttons.ROPE;
+        bool up = (command.Buttons & Buttons.UP) ==Buttons.UP;
+        bool down = (command.Buttons & Buttons.DOWN) == Buttons.DOWN;
 
         if (left)
         {
@@ -337,31 +289,19 @@ namespace warlocks.Game
           {
             this.velocity.X += 2;
 
-
           }
-
         }
 
-
-        //dig time
         if (dig)
         {
           int digx = (int)(this.position.X + this.view.X * 12);
           int digy = (int)(this.position.Y + this.view.Y * 12);
 
-          Debug.WriteLine(this.view.X * 12 + ", " + this.view.Y * 12);
-
           int iposx = (int)this.position.X;
           int iposy = (int)this.position.Y;
 
-          game.leveldata.setPixels(digx, digy, 7, 0, game);
-
-
-
+          game.leveldata.setPixels(digx, digy, 7, 0);
         }
-
-        //this.velocity = this.velocity + command.velocity;
-
 
         if (jump)
         {
@@ -377,8 +317,6 @@ namespace warlocks.Game
         }
         else
           ableToJump = true;
-
-
 
         if (ninjarope.isout)
         {
@@ -542,8 +480,9 @@ namespace warlocks.Game
     {
 
       this.weapondelayleft = 5;
+      var w = Common.Weapons[activeWeapon];
 
-      tempweapon.fire(game, this, this.position, this.view, this.id);
+      w.fire(game, this, this.position, this.view);
 
     }
 

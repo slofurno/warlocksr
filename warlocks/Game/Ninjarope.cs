@@ -25,7 +25,7 @@ namespace warlocks.Game
 
     public string ToJson()
     {
-      return "{\"x\":" + this.x + ",\"y\":" + this.y + ",\"isout\":" + "\"" + this.isout + "\"}";
+      return "{\"x\":" + this.x + ",\"y\":" + this.y + ",\"isout\":" + this.isout.ToString().ToLower() + "}";
     }
 
     public void process(Worm owner, WGame game)
