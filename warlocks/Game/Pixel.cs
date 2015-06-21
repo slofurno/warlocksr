@@ -6,7 +6,12 @@ using System.Threading.Tasks;
 
 namespace warlocks.Game
 {
-  public enum PIXEL { empty=0, dirt, rock, blood };
+  public enum PIXEL { 
+    empty=0, 
+    dirt, 
+    rock, 
+    blood 
+  };
 
 
   public class Pixel
@@ -25,6 +30,12 @@ namespace warlocks.Game
     public string ToJson()
     {
       return "{\"X\":" + this.X + ",\"Y\":" + this.Y + ",\"color\":" + this.color + "}";
+    }
+
+    public int ToInt()
+    {
+      int tevs = (this.color << 24) | (this.X << 12) | this.Y;
+      return tevs;
     }
 
 

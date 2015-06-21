@@ -15,8 +15,32 @@ namespace warlocks.Game
     static Common()
     {
       Weapons = new Weapon[]{
-        new Weapon(){ Bounce=60, timeToExplosion=120, Id=0, explosionRadius=20,gravity=.15},
-        new Weapon(){Bounce=0,Id=1, explosionRadius=3, gravity=0}
+        new Weapon(){ 
+          Bounce=60, 
+          timeToExplosion=200, 
+          Id=0, 
+          explosionRadius=20,
+          gravity=.05,
+          splinterAmount=100,
+          velocity=2
+        },
+        new Weapon(){
+          Bounce=0,
+          Id=1, 
+          explosionRadius=3, 
+          gravity=0,
+          velocity=5
+        },
+        new Weapon(){ 
+          Bounce=0, 
+          timeToExplosion=40, 
+          Id=2, 
+          explosionRadius=20,
+          gravity=.02,
+          splinterAmount=6,
+          velocity=4
+        },
+
       };
     }
 
@@ -31,6 +55,8 @@ namespace warlocks.Game
     public int timeToExplosion { get; set; }
     public int explosionRadius { get; set; }
     public double gravity { get; set; }
+    public int splinterAmount { get; set; }
+    public double velocity { get; set; }
 
     public void fire(WGame game, Worm owner, Vector2 position, Vector2 direction)
     {
@@ -39,8 +65,8 @@ namespace warlocks.Game
       obj.x = position.X;
       obj.y = position.Y;
 
-      obj.velX = (5 * direction.X);
-      obj.velY = (5 * direction.Y);
+      obj.velX = (this.velocity * direction.X);
+      obj.velY = (this.velocity * direction.Y);
 
       obj.firedbyid = owner.id;
       obj.id = this.Id;

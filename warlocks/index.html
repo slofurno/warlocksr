@@ -7,9 +7,10 @@
 
   <script src="bitmap.js"></script>
   <script src="keyboard.js"></script>
+  <script src="leveldata.js"></script>
 
   <div style="z-index:-1; position:absolute;">
-    <canvas id="liero" width="1000" height="1000" style="width:2000px; height:2000px;background-color:sandybrown"></canvas>
+    <canvas id="liero" width="800" height="600" style="background-color:burlywood;width:150%;height:auto;"></canvas>
 
 
   </div>
@@ -25,6 +26,7 @@
     var fps = 0;
 
     var tempratio = 2;
+    var myId = -1;
 
     var tempelements = [];
     var playerarray = [];
@@ -32,25 +34,58 @@
     var objectarray = [];
     var bloodarray = [];
 
+    var splinters = [];
+
+    function Particle(x,y,vx,vy,duration,radius) {
+      this.time = duration;
+      this.x = x;
+      this.y = y;
+      this.vx = vx;
+      this.vy = vy;
+      this.radius = radius;
+
+    }
+
+    Particle.prototype.update = function () {
+
+      this.x += this.vx;
+      this.y += this.vy;
+      this.time--;
+
+    };
+
+    Particle.prototype.render = function (ctx) {
+
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+      ctx.fill();
+
+    };
+
     var c = document.getElementById("liero");
     var ctx = c.getContext("2d");
-    ctx.clearRect(0, 0, 1000, 1000);
+    ctx.clearRect(0, 0, 800, 600);
 
     ctx.fillStyle = "blue";
-    ctx.fillRect(0, 0, 1000, 1000);
+    ctx.fillRect(0, 0, 800, 600);
     var level = new bitmap();
     var black = new color(0, 0, 0, 255);
-    var colorred = new color(0, 0, 255, 255);
+    var white = new color(255, 255, 255, 255);
+    var colorred = new color(255, 0, 0, 255);
+    var dirt = new color(128, 64, 0, 255);
+    var rock = new color(128, 128, 128, 255);
+
     var transparent = new color(0, 0, 0, 0);
 
     ctx.fillStyle = "red";
 
+    var palette = [transparent.toInt(), dirt.toInt(), rock.toInt(), colorred.toInt()];
 
+    var leveldata = [];
     var colorarray = [];
 
     colorarray[0] = transparent;
     colorarray[3] = colorred;
-
 
     var playerState = { view: { x: 1, y: 1 } };
 
@@ -61,6 +96,7 @@
     var SHOOT = 16;
     var JUMP = 32;
     var ROPE = 64;
+    var SWITCH = 128;
 
     var angle = 0;
     var xdir = 1;
@@ -75,10 +111,8 @@
       if (ks.left && ks.right) {
         //
       } else if (ks.left) {
-        //view.x = -50;
         xdir = -1;
       } else if (ks.right) {
-        //view.x = 50;
         xdir = 1;
       }
 
@@ -101,14 +135,6 @@
       view.x = Math.cos(aa);
       view.y = Math.sin(aa);
 
-
-      /*
-      if (ks.up && view.y < 50) {
-        view.y++;
-      } else if (ks.down && view.y > -50) {
-        view.y--;
-      }
-      */
       if (ks.up) {
         buttons |= UP;
       }
@@ -130,6 +156,9 @@
       if (ks.rope) {
         buttons |= ROPE;
       }
+      if (ks.switch) {
+        buttons |= SWITCH;
+      }
 
       ps += view.x + '|';
       ps += view.y + '|';
@@ -141,18 +170,30 @@
 
     function tick() {
       window.requestAnimationFrame(tick);
-
       handleInput();
 
-      level.redraw(ctx);
+      var xoff = (playerarray[myId].position.X - 400)|0;
+      var yoff = (playerarray[myId].position.Y - 300) | 0;
+
+      xoff = Math.max(xoff, 0);
+      yoff = Math.max(yoff, 0);
+
+      xoff = Math.min(xoff, leveldata.width - 800);
+      yoff = Math.min(yoff, leveldata.height - 600);
+
+      ctx.clearRect(0, 0, 800, 600);
+      leveldata.render(ctx, xoff, yoff);
+
+      ctx.save();
+      ctx.translate(-xoff, -yoff);
+
+      ctx.fillStyle = "limegreen";
 
       playerarray.forEach(function(player){
-
-
-        var temp = tempelements[player.id];
-
-        var angle = Math.round(Math.atan2(player.view.Y, player.view.X) * (180 / Math.PI));
-        temp.style.transform = 'translate(' + (player.position.X * tempratio - 15) + 'px, ' + (player.position.Y * tempratio - 15) + 'px) translateZ(0) rotate(' + angle + 'deg)';
+        //var temp = tempelements[player.id];
+        //var angle = Math.round(Math.atan2(player.view.Y, player.view.X) * (180 / Math.PI));
+        //temp.style.transform = 'translate(' + (player.position.X * tempratio - 15 + xoff) + 'px, ' + (player.position.Y * tempratio - 15 + yoff) + 'px) translateZ(0) rotate(' + angle + 'deg)';
+        ctx.fillRect(player.position.X - 5, player.position.Y - 10, 10, 20);
 
         if (player.ninjarope.isout) {
           ctx.strokeStyle = "slategray";
@@ -165,21 +206,44 @@
 
       });
 
+      var p = playerarray[myId];
+      var cursorx = p.position.X + p.view.X * 20;
+      var cursory = p.position.Y + p.view.Y * 20;
+      ctx.fillRect(cursorx, cursory, 2, 2);
+
+      ctx.fillStyle = "darkslateblue";
+
+
       objectarray.forEach(function(object){
         ctx.fillRect(object.x - 1, object.y - 1, 2, 2);
 
       });
+
+
+      ctx.fillStyle = "red";
 
       bloodarray.forEach(function(object){
         ctx.fillRect(object.x - 1, object.y - 1, 2, 2);
 
       });
 
+      ctx.fillStyle = "rgba(230,150,20,.8)";
+
+      while (splinters.length > 0 && splinters[0].time == 0) {
+        splinters.shift();
+      }
+
+      splinters.forEach(function (e) {
+        if (e.time > 0) {
+          e.update();
+          e.render(ctx);
+        }
+      });
+
+      ctx.restore();
       iterations++;
       var currenttime = new Date;
-
       fps = (iterations / (currenttime - starttime)) * 1000;
-
     }
 
 
@@ -188,18 +252,44 @@
     ws.onopen = function (e) {
       starttime = new Date;
       level.test(transparent);
-      tick();
     };
 
-    ws.onmessage = function (e) {
-      //console.log(e.data);
+    var normalUpdate = function (e) {
       var update = JSON.parse(e.data);
       updateObjects(update.objects);
       updateBlood(update.blood);
       updateWorms(update.worms);
       updatePixels(update.pixels);
+      updateSplinters(update.splinters);
+    };
+
+    var firstMessage = function (e) {
+      var update = JSON.parse(e.data);
+
+      console.log(update);
+      leveldata = LevelData(update.width, update.height, update.pixels, palette);
+      console.log(update);
+      myId = update.id;
+
+      ws.onmessage = normalUpdate;
+      tick();
 
     };
+
+    ws.onmessage = firstMessage;
+ 
+
+    function updateSplinters(sp) {
+
+      var add = sp.map(function (s) {
+        return new Particle(s.x, s.y, s.vx, s.vy, 20, 4);
+      });
+
+      add.forEach(function (s) {
+        splinters.push(s);
+      });
+    }
+
 
     function updateObjects(objects) {
 
@@ -233,12 +323,12 @@
       players.forEach(function (player) {
         if (typeof playerarray[player.id] == 'undefined') {
           playerarray[parseInt(player.id)] = new Player(player.id, player.position, player.view, player.ninjarope);
-          var newDiv = document.createElement("div");
-          newDiv.style.position = "absolute";
-          newDiv.innerHTML = "<IMG SRC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAadEVYdFNvZnR3YXJlAFBhaW50Lk5FVCB2My41LjEwMPRyoQAAAPRJREFUSEvtzUsSwyAMBFGOnpvjMgYzklr4s8rCi1dlOpAptdZXyq/Uwf82P7VZGK/oaBw/r3UhNBhXaHSA612MIazQmIInXYwhrNCYgiddjCGs0JiCJ12MIWRoiMSnITQYCY1k5jP7HwojoYGMf0swEhpQ9ro5IIyExnZwVWBsMJLnowPGbzj3bnSIMYTM3wzfH8f4DedoeAdXBcYGI6FRZa+bA8JIaCzj3xKMhAYy/i3BSGgg498SjBka8eyb8antEMIKDXnz/vmss8EcrtCQd9w1z8Q8aL2FxoZ577zuzIPW29ajO/k05kHrI/no4JMeatkAhwdFpFX2aakAAAAASUVORK5CYII='>";
+          //var newDiv = document.createElement("div");
+          //newDiv.style.position = "absolute";
+          //newDiv.innerHTML = "<IMG SRC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAadEVYdFNvZnR3YXJlAFBhaW50Lk5FVCB2My41LjEwMPRyoQAAAPRJREFUSEvtzUsSwyAMBFGOnpvjMgYzklr4s8rCi1dlOpAptdZXyq/Uwf82P7VZGK/oaBw/r3UhNBhXaHSA612MIazQmIInXYwhrNCYgiddjCGs0JiCJ12MIWRoiMSnITQYCY1k5jP7HwojoYGMf0swEhpQ9ro5IIyExnZwVWBsMJLnowPGbzj3bnSIMYTM3wzfH8f4DedoeAdXBcYGI6FRZa+bA8JIaCzj3xKMhAYy/i3BSGgg498SjBka8eyb8antEMIKDXnz/vmss8EcrtCQd9w1z8Q8aL2FxoZ577zuzIPW29ajO/k05kHrI/no4JMeatkAhwdFpFX2aakAAAAASUVORK5CYII='>";
 
-          tempelements[player.id] = newDiv;
-          document.body.appendChild(newDiv);
+          //tempelements[player.id] = newDiv;
+          //document.body.appendChild(newDiv);
         }  else {
 
           playerarray[player.id].update(player.position, player.view, player.ninjarope);
@@ -253,7 +343,8 @@
    function updatePixels(pixels) {
 
      pixels.forEach(function (pixel) {
-       level.setPixel(pixel.X, pixel.Y, colorarray[pixel.color]);
+       //level.setPixel(pixel.X, pixel.Y, colorarray[pixel.color]);
+       leveldata.write(pixel);
 
      });
      

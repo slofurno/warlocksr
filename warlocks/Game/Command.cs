@@ -7,17 +7,18 @@ using System.Threading.Tasks;
 namespace warlocks.Game
 {
 
-  public class Buttons
+  public static class Buttons
   {
     
-    public static readonly int UP = 1;
-    public static readonly int DOWN = 2;
-    public static readonly int LEFT = 4;
-    public static readonly int RIGHT = 8;
-    public static readonly int SHOOT = 16;
-    public static readonly int JUMP = 32;
-    public static readonly int ROPE = 64;
-    public static readonly int DIG = Buttons.LEFT | Buttons.RIGHT;
+    public const int UP = 1;
+    public const int DOWN = 2;
+    public const int LEFT = 4;
+    public const int RIGHT = 8;
+    public const int SHOOT = 16;
+    public const int JUMP = 32;
+    public const int ROPE = 64;
+    public const int DIG = Buttons.LEFT | Buttons.RIGHT;
+    public const int SWITCH = 128;
 
   }
 

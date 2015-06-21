@@ -20,6 +20,8 @@ namespace warlocks.Game
     int _width = 0;
     int counter = 0;
 
+    public string json { get; set; }
+
     public int dirtycounter = 0;
     public List<Pixel> _alldirtypixels;
     private ConcurrentQueue<Pixel> _dirtypixels;
@@ -58,18 +60,16 @@ namespace warlocks.Game
       _dirtypixels = new ConcurrentQueue<Pixel>();
       _alldirtypixels = new List<Pixel>();
 
-
+      var img = Image.FromFile("level1.png");
+      _bitmap = new Bitmap(img);
+      /*
       using (var fs = File.OpenRead(name))
       {
         _bitmap = new Bitmap(fs);
       }
+       * */
 
       this.processBitmap();
-
-      //Thread newThread = new Thread(this.processBitmap);
-      //newThread.Start();
-
-
     }
 
     public void processBitmap()
@@ -92,20 +92,25 @@ namespace warlocks.Game
 
           pixelcolor = _bitmap.GetPixel(j, i);
 
-          if ((pixelcolor.B == 255) && (pixelcolor.R == 255) && (pixelcolor.G == 255))
-          {
-
-            _intarray[i * width + j] = 1;
-
-          }
-          else
+          if (pixelcolor.A == 0)
           {
             _intarray[i * width + j] = 0;
           }
+          else if (pixelcolor.A == 255)
+          {
+            _intarray[i * width + j] = 2;
+          }
+          else
+          {
+            _intarray[i * width + j] = 1;
+          }
+          
 
           counter++;
         }
       }
+
+      this.json = "[" + string.Join(",", _intarray) + "]";        //,_intarray.Select(x=>x.ToString()).ToArray()
 
       this.ready = true;
 
@@ -118,7 +123,7 @@ namespace warlocks.Game
 
       if (this.ready)
       {
-
+        //TODO:i think somewhere there are some bounds issues dropping fps
         if (x < 0 || y < 0 || x >= _width || y >= _height)
         {
           Debug.WriteLine("out of bounds");

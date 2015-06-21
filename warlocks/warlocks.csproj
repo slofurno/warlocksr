@@ -51,6 +51,7 @@
     <Compile Include="Game\NObject.cs" />
     <Compile Include="Game\ObjectList.cs" />
     <Compile Include="Game\Pixel.cs" />
+    <Compile Include="Game\SObject.cs" />
     <Compile Include="Game\Vector2.cs" />
     <Compile Include="Game\WObject.cs" />
     <Compile Include="Program.cs" />
@@ -70,6 +71,7 @@
     <Content Include="gamepad.js" />
     <Content Include="index.html" />
     <Content Include="keyboard.js" />
+    <Content Include="leveldata.js" />
     <Content Include="testlevel.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

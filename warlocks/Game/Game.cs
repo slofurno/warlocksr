@@ -13,10 +13,12 @@ namespace warlocks.Game
   {
 
     public List<NObject> bloodlist;
+    public List<SObject> _splinters;
 
     private Dictionary<int, Worm> _playerdictionary;
     private BMAP _leveldata;
-    private List<Pixel>[] _history;
+    private List<Pixel>[] _pixelBuffer;
+    private List<SObject>[] _splinterBuffer;
 
     public ObjectList<WObject> wormobjects;
     private ConcurrentQueue<Websocket> _connections;
@@ -38,12 +40,16 @@ namespace warlocks.Game
       _playerdictionary = new Dictionary<int, Worm>();
       _leveldata = new BMAP("testlevel.bmp");
       bloodlist = new List<NObject>();
+      _splinters = new List<SObject>();
+
       this.wormobjects = new ObjectList<WObject>(() => new WObject());
-      _history = new List<Pixel>[32];
+      _pixelBuffer = new List<Pixel>[32];
+      _splinterBuffer = new List<SObject>[32];
 
       for (int i = 0; i < 32; i++)
 			{
-        _history[i] = new List<Pixel>();
+        _pixelBuffer[i] = new List<Pixel>();
+        _splinterBuffer[i] = new List<SObject>();
 			}
 
        
@@ -88,12 +94,23 @@ namespace warlocks.Game
           
           while (en.MoveNext()){
 
+            var last = en.Current.LastUpdate;
+
+            if (last == 0)
+            {
+              en.Current.LastUpdate = 1;
+
+              var greet = "{\"id\":" + en.Current.Id + ",\"width\":" + leveldata.width + ",\"height\":" + leveldata.height + ",\"pixels\":" + leveldata.json + "}";
+              en.Current.Write(greet);
+              continue;
+            }
+
             if (en.Current.Available() == 0)
             {
               continue;
             }
 
-            var last = en.Current.LastUpdate;
+            en.Current.LastUpdate = frame;
 
             while (en.Current.Available() > 0)
             {
@@ -112,28 +129,37 @@ namespace warlocks.Game
               }
             }
 
-            var missed = new List<Pixel>();
+            var missedPixels = new List<Pixel>();
+            var missedSplinters = new List<SObject>();
 
             if ((frame - last) > 31)
             {
-              missed = leveldata._alldirtypixels;
+              missedPixels = leveldata._alldirtypixels;
             }
             else
             {
-               for (var i = last; i < frame; i++)
-            {
-              missed.AddRange(_history[i & 31]);
-            }
+              for (var i = last; i < frame; i++)
+              {
+                missedPixels.AddRange(_pixelBuffer[i & 31]);
+                missedSplinters.AddRange(_splinterBuffer[i & 31]);
+              }
             }
            
             
             var worms = "[" + string.Join(",", wormList.Select(x => x.ToJson()).ToArray()) + "]";
             var blood = "[" + string.Join(",", bloodlist.Select(x => x.ToJson()).ToArray()) + "]";
             var objects = "[" + string.Join(",", wormobjects.getList().Select(x => x.ToJson()).ToArray()) + "]";
-            var pixels = "[" + string.Join(",", missed.Select(x => x.ToJson())) + "]";
-            var update = "{\"worms\":" + worms + ",\"blood\":" + blood + ",\"objects\":" + objects + ",\"pixels\":" + pixels + "}";
+            var pixels = "[" + string.Join(",", missedPixels.Select(x => x.ToInt())) + "]";
+            var splinters = "[" + string.Join(",", missedSplinters.Select(x => x.ToJson())) + "]";
 
-            en.Current.LastUpdate = frame;
+            if (missedSplinters.Count() > 0)
+            {
+              var dfsd = "dsfsd";
+            }
+
+            var update = "{\"worms\":" + worms + ",\"blood\":" + blood + ",\"objects\":" + objects + ",\"pixels\":" + pixels + ",\"splinters\":" + splinters + "}";
+
+           
             en.Current.Write(update);
           }
 
@@ -148,10 +174,19 @@ namespace warlocks.Game
 
           var dirtypixels = leveldata.getDirtyPixels();
           var index = frame & 31;
-          _history[index].Clear();
-          _history[index].AddRange(dirtypixels);
+          _pixelBuffer[index].Clear();
+          _pixelBuffer[index].AddRange(dirtypixels);
+
+          _splinterBuffer[index].Clear();
+          _splinterBuffer[index].AddRange(_splinters.ToArray());
+          _splinters.Clear();
 
           runtime.Stop();
+          var el = runtime.Elapsed.TotalMilliseconds;
+          if (el > 5)
+          {
+            var sdfgsdf = "fsd";
+          }
           Console.WriteLine(runtime.Elapsed.TotalMilliseconds);
           ++frame;
 

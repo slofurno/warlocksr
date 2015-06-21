@@ -9,7 +9,8 @@ var keyboard = (function () {
     ["down", 40],
     ["jump", 32],
     ["rope", 68],
-    ["shoot", 70]
+    ["shoot", 70],
+    ["switch",82]
   ];
 
   window.onkeydown = function (e) {
@@ -32,7 +33,6 @@ var keyboard = (function () {
     });
     return state;
   };
-
 
   return { getState: getState };
 

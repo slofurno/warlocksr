@@ -26,23 +26,37 @@ namespace warlocks.Socket
 
     public void Write(string s)
     {
-      const int headersize = 10;
+      //TODO:prolly change this
+      //chrome wont let us use 64 bit size if < 16bit size
+      var max = UInt16.MaxValue;
+      int headersize = 4;
+      byte sizeflag = 126;
+
       var bytes = Encoding.UTF8.GetBytes(s);
       var len = bytes.Length;
 
+      if (len > max)
+      {
+        sizeflag++;
+        headersize += 6;
+      }
+
       var buffer = new byte[len + headersize];
       buffer[0] = 129;
-      buffer[1] = 127;
+      buffer[1] = sizeflag;
 
-      buffer[2] = 0;
-      buffer[3] = 0;
-      buffer[4] = 0;
-      buffer[5] = 0;
+      if (len > max)
+      {
+        buffer[2] = 0;
+        buffer[3] = 0;
+        buffer[4] = 0;
+        buffer[5] = 0;
+        buffer[6] = 0;
+        buffer[7] = (byte)((len >> 16) & 255);
+      }
 
-      buffer[6] = 0;
-      buffer[7] = (byte)((len >> 16) & 255);
-      buffer[8] = (byte)((len >> 8) & 255);
-      buffer[9] = (byte)(len & 255);
+      buffer[headersize-2] = (byte)((len >> 8) & 255);
+      buffer[headersize-1] = (byte)(len & 255);
 
       Array.Copy(bytes, 0, buffer, headersize, len);
 

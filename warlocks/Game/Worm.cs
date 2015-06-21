@@ -31,6 +31,7 @@ namespace warlocks.Game
     public Ninjarope ninjarope { get; set; }
     private bool ableToRope { get; set; }
     public int activeWeapon { get; set; }
+    private bool canSwitch = true;
 
     public int weapondelayleft { get; set; }
 
@@ -273,21 +274,18 @@ namespace warlocks.Game
         if (left)
         {
 
-          if (this.velocity.X >= -2)
+          if (this.velocity.X >= -1.5)
           {
-            this.velocity.X -= 2;
-
-
+            this.velocity.X -= 1.5;
           }
-
         }
 
         if (right)
         {
 
-          if (this.velocity.X <= 2)
+          if (this.velocity.X <= 1.5)
           {
-            this.velocity.X += 2;
+            this.velocity.X += 1.5;
 
           }
         }
@@ -311,7 +309,7 @@ namespace warlocks.Game
           if ((reacts[RF.Up] > 0)
           && (ableToJump))
           {
-            this.velocity.Y -= 5;
+            this.velocity.Y -= 4;
             ableToJump = false;
           }
         }
@@ -453,10 +451,24 @@ namespace warlocks.Game
 
       processWeapons(game);
 
-      if ((command.Buttons&Buttons.SHOOT) > 0 && weapondelayleft <= 0)
+
+      if ((command.Buttons & Buttons.SWITCH) == Buttons.SWITCH)
+      {
+        if (canSwitch)
+        {
+          activeWeapon++;
+          activeWeapon %= Common.Weapons.Length;
+          canSwitch = false;
+        }
+      }
+      else
+      {
+        canSwitch = true;
+      }
+
+      if ((command.Buttons & Buttons.SHOOT) == Buttons.SHOOT && weapondelayleft <= 0)
       {
         fire(game);
-
       }
 
       processPhysics(game);
