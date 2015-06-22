@@ -61,7 +61,7 @@ namespace warlocks.Game
 
       if (game.leveldata.getPixel(ix, iy) == PIXEL.dirt)
       {
-        game.leveldata.setPixel2(ix, iy, PIXEL.blood);
+        game.leveldata.setPixel(ix, iy, PIXEL.blood);
         doExplode = true;
 
 

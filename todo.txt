@@ -1,0 +1,18 @@
+done
+encode the pixel updates to be smaller
+make the level scroll with you as you move
+a better map... with rocks... + a better background
+improve the feel of jumping/movement
+explosions
+targeting cursor
+
+
+todo
+new character model
+multicolored terrain
+explosion knockback
+weapon kickback
+splinters that are capable of exploding etc
+projectile trails?
+clientside explosions -> lerp between two states; size,color
+

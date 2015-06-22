@@ -1,16 +1,4 @@
 ﻿
-function color(r, g, b, a) {
-    this.r = r;
-    this.g = g;
-    this.b = b;
-    this.a = a;
-}
-
-color.prototype.toInt = function () {
-
-  return (this.a << 24) | (this.b << 16) | (this.g << 8) | this.r;
-
-};
 
 function bitmap() {
 

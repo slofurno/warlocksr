@@ -266,8 +266,15 @@
     var firstMessage = function (e) {
       var update = JSON.parse(e.data);
 
+      var pal = update.palette.map(function (p) {
+        var a = 0;
+        if (p.a > 0) {
+          a = 255;
+        }
+        return new color(p.r, p.g, p.b, a);
+      });
       console.log(update);
-      leveldata = LevelData(update.width, update.height, update.pixels, palette);
+      leveldata = LevelData(update.width, update.height, update.pixels, pal);
       console.log(update);
       myId = update.id;
 

@@ -59,7 +59,7 @@ namespace warlocks.Game
         {
           if (i * i + j * j <= radius * radius && game.leveldata.getPixel(ix + i, iy + j) != PIXEL.rock)
           {
-            game.leveldata.setPixel(ix + i, iy + j, 0);
+            game.leveldata.setPixel(ix + i, iy + j, PIXEL.empty);
           }
         }
       }

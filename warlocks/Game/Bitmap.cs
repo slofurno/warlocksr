@@ -13,18 +13,24 @@ namespace warlocks.Game
   public class BMAP
   {
 
-    Bitmap _bitmap;
-    int[] _intarray;
+    Dictionary<Color, int> _paletteLookup;
+    HashSet<Color> _existingColors;
+    PIXEL[] _levelData;
+    int[] _colorData;
+
     public bool ready = false;
+    int _colorCount = 0;
+
     int _height = 0;
     int _width = 0;
     int counter = 0;
 
     public string json { get; set; }
+    public string _palette { get; set; }
 
     public int dirtycounter = 0;
     public List<Pixel> _alldirtypixels;
-    private ConcurrentQueue<Pixel> _dirtypixels;
+    private List<Pixel> _dirtypixels;
     public Pixel[] dirtypixels
     {
       get
@@ -57,11 +63,18 @@ namespace warlocks.Game
     public BMAP(string name)
     {
 
-      _dirtypixels = new ConcurrentQueue<Pixel>();
-      _alldirtypixels = new List<Pixel>();
+      
 
-      var img = Image.FromFile("level1.png");
-      _bitmap = new Bitmap(img);
+      _dirtypixels = new List<Pixel>();
+      _alldirtypixels = new List<Pixel>();
+      _existingColors = new HashSet<Color>();
+      _paletteLookup = new Dictionary<Color, int>();
+
+      using (var img = Image.FromFile("level1.png"))
+      {
+        var bitmap = new Bitmap(img);
+        processBitmap(bitmap);
+      }
       /*
       using (var fs = File.OpenRead(name))
       {
@@ -69,176 +82,107 @@ namespace warlocks.Game
       }
        * */
 
-      this.processBitmap();
     }
 
-    public void processBitmap()
+    public void processBitmap(Bitmap bitmap)
     {
 
-      int height = _bitmap.Height;
-      int width = _bitmap.Width;
+      int height = bitmap.Height;
+      int width = bitmap.Width;
 
       _height = height;
       _width = width;
 
-      _intarray = new int[height * width];
+      _levelData = new PIXEL[height * width];
+      _colorData = new int[height * width];
 
       Color pixelcolor;
+      int key;
 
-      for (int i = 0; i < height; i++)
+      for (int j = 0; j < height; j++)
       {
-        for (int j = 0; j < width; j++)
+        for (int i = 0; i < width; i++)
         {
 
-          pixelcolor = _bitmap.GetPixel(j, i);
+          pixelcolor = bitmap.GetPixel(i, j);
+
+          if (!_paletteLookup.TryGetValue(pixelcolor, out key))
+          {
+            _paletteLookup.Add(pixelcolor, _colorCount);
+            key = _colorCount;
+            _colorCount++;
+          }
+
+          _colorData[j * width + i] = key;
 
           if (pixelcolor.A == 0)
           {
-            _intarray[i * width + j] = 0;
+            _levelData[j * width + i] = 0;
           }
           else if (pixelcolor.A == 255)
           {
-            _intarray[i * width + j] = 2;
+            _levelData[j * width + i] = PIXEL.rock;
           }
           else
           {
-            _intarray[i * width + j] = 1;
+            _levelData[j * width + i] = PIXEL.dirt;
           }
-          
+
 
           counter++;
         }
       }
 
-      this.json = "[" + string.Join(",", _intarray) + "]";        //,_intarray.Select(x=>x.ToString()).ToArray()
+      var palette = _paletteLookup.Keys.Select(x => new Tuple<int, Color>(_paletteLookup[x], x)).OrderBy(x => x.Item1).Select(x => x.Item2).ToArray();
+
+      _palette = "[" + String.Join(",", palette.Select(x => "{\"r\":" + x.R + ",\"g\":" + x.G + ",\"b\":" + x.B + ",\"a\":" + x.A + "}").ToArray()) + "]";
+
+      this.json = "[" + string.Join(",", _colorData) + "]";        //,_intarray.Select(x=>x.ToString()).ToArray()
 
       this.ready = true;
 
     }
 
-
-    public int getColor(int x, int y)
+    public void setPixels(int digx, int digy, int radius, PIXEL pixel)
     {
-      var result = 0;
-
-      if (this.ready)
-      {
-        //TODO:i think somewhere there are some bounds issues dropping fps
-        if (x < 0 || y < 0 || x >= _width || y >= _height)
-        {
-          Debug.WriteLine("out of bounds");
-
-        }
-        else
-        {
-          result = _intarray[y * _width + x];
-
-          //Debug.WriteLine("number : " + result);
-        }
-      }
-
-      //Debug.WriteLine("how many : " + counter);
-
-      return result;
-
-    }
-
-    public int setPixel(int x, int y, int color)
-    {
-
-      if (x < 0 || y < 0 || x >= _width || y >= _height)
-      {
-
-      }
-      else if (_intarray[y * _width + x] == color)
-      {
-        return 0;
-      }
-      else
-      {
-        _intarray[y * _width + x] = color;
-        _dirtypixels.Enqueue(new Pixel(x, y, color));
-        dirtycounter++;
-
-        return 1;
-      }
-      return -1;
-
-    }
-
-
-
-    public void setPixels(int digx, int digy, int radius, int color)
-    {
-
       for (int i = -radius; i < radius; i++)
       {
         for (int j = -radius; j < radius; j++)
         {
-
           if (i * i + j * j <= radius * radius)
           {
-            setPixel(digx + i, digy + j, color);
-
+            setPixel(digx + i, digy + j, pixel);
           }
-
         }
       }
-
 
     }
 
     public PIXEL getPixel(int x, int y)
     {
-
-        if (x < 0 || y < 0 || x >= _width || y >= _height)
-        {
-          Debug.WriteLine("out of bounds");
-          return PIXEL.rock;
-
-        }
-        else
-        {
-          var i = _intarray[y * _width + x];
-          var pixel = (PIXEL)i;
-          return pixel;
-          //return (PIXEL)_intarray[y * _width + x];
-        }
-
+      if (x < 0 || y < 0 || x >= _width || y >= _height)
+      {
+        Debug.WriteLine("out of bounds");
+        return PIXEL.rock;
+      }
+      else
+      {
+        return _levelData[y * _width + x];
+      }
     }
 
-    public void setPixel2(int x, int y, PIXEL pixel)
+    public void setPixel(int x, int y, PIXEL pixel)
     {
 
-      int color = (int)pixel;
-
-      if (this.ready)
+      if (x < 0 || y < 0 || x >= _width || y >= _height)
       {
-
-        if (x < 0 || y < 0 || x >= _width || y >= _height)
-        {
-          Debug.WriteLine("out of bounds");
-
-
-        }
-        else if (_intarray[y * _width + x] == color)
-        {
-
-          return;
-          //Debug.WriteLine("number : " + result);
-        }
-        else
-        {
-          _intarray[y * _width + x] = color;
-
-          _dirtypixels.Enqueue(new Pixel(x, y, color));
-
-          return;
-
-        }
+        Debug.WriteLine("out of bounds");
       }
-
-
+      else if (_levelData[y * _width + x] != pixel)
+      {
+        _levelData[y * _width + x] = pixel;
+        _dirtypixels.Add(new Pixel(x, y, pixel));
+      }
 
     }
 
@@ -247,8 +191,6 @@ namespace warlocks.Game
       if (x < 0 || y < 0 || x >= _width || y >= _height)
       {
         return false;
-
-
       }
 
       return true;
@@ -256,22 +198,14 @@ namespace warlocks.Game
 
     public Pixel[] getDirtyPixels()
     {
+      var p = _dirtypixels.ToArray();
 
-      List<Pixel> templist = new List<Pixel>();
+      _dirtypixels.Clear();
+      _alldirtypixels.AddRange(p);
 
-      Pixel temppixel;
-
-      while (_dirtypixels.TryDequeue(out temppixel))
-      {
-        templist.Add(temppixel);
-      }
-
-      _alldirtypixels.AddRange(templist);
-
-      return templist.ToArray();
+      return p;
     }
+
+
   }
-
-
-
 }

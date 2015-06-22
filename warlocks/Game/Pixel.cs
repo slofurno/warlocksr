@@ -20,6 +20,13 @@ namespace warlocks.Game
     public int Y { get; set; }
     public int color { get; set; }
 
+    public Pixel(int x, int y, PIXEL pixel)
+    {
+      this.X = x;
+      this.Y = y;
+      this.color = (int)pixel;
+    }
+
     public Pixel(int x, int y, int color)
     {
       this.X = x;

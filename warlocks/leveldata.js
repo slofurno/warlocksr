@@ -1,5 +1,18 @@
 ﻿"use strict";
 
+function color(r, g, b, a) {
+  this.r = r;
+  this.g = g;
+  this.b = b;
+  this.a = a;
+}
+
+color.prototype.toInt = function () {
+
+  return (this.a << 24) | (this.b << 16) | (this.g << 8) | this.r;
+
+};
+
 var LevelData = function (width, height, data, palette) {
   /*
   var _back = document.createElement('canvas');
@@ -19,12 +32,15 @@ var LevelData = function (width, height, data, palette) {
 
   var _height = height;
   var _width = width;
+  var _palette = palette.map(function (c) {
+    return c.toInt();
+  });
 
   for (var i = 0; i < data.length; i++) {
-    _wb[i] = palette[data[i]];
+    _wb[i] = _palette[data[i]];
   }
 
-  console.log("palette",palette);
+  console.log("palette", _palette);
 
   var PMASK = 15 << 24;
 
@@ -34,11 +50,11 @@ var LevelData = function (width, height, data, palette) {
   var INDEXMASK = XMASK | YMASK;
 
   var write = function (pack) {
-    var x = (pack & XMASK) >> 12;
-    var y = pack & YMASK;
-    var p = (pack & PMASK) >> 24;
+    var x = (pack >> 12) & 4095;
+    var y = pack & 4095;
+    var p = pack >> 24;
 
-    _wb[y * width + x] = palette[p];
+    _wb[y * width + x] = _palette[p];
 
   };
 
